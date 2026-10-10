@@ -4,17 +4,24 @@ Semua item belum dikerjakan. Centang hanya dengan bukti (lihat skill `/verify-ph
 
 ## F0 — Persiapan
 
-- [ ] Scaffold Next.js 16 (App Router, TS strict), pnpm, ESLint, Prettier; kunci versi patch semua library di `package.json`.
-- [ ] Tailwind v4 + shadcn/ui (new-york), token warna (biru tua, EWS, Gantt), font Inter.
-- [ ] Prisma 7: `prisma.config.ts` (URL dari `DIRECT_URL`, perintah seed), client singleton dengan `PrismaPg` (`DATABASE_URL`). Salin `prisma/schema.prisma` dari paket ini.
-- [ ] Vitest, Playwright (desktop + 375 px), axe-core; script `lint`, `typecheck`, `test`, `test:e2e`.
-- [ ] Repo GitHub + workflow CI (lint, typecheck, test, build).
-- [ ] Neon: project region Asia, branch `dev`/`preview`/`main`, autoscaling maks. 0,25 CU.
-- [ ] R2: bucket `dev`, `prod`, `backup`; kredensial terpisah untuk backup.
-- [ ] Vercel: project terhubung repo, region fungsi Asia (sama dengan Neon), env variable.
-- [ ] `.env.example` lengkap; `AGENTS.md` bagian perintah diperbarui.
-- [ ] Prototipe layar utama (dashboard, daftar proyek, workspace, Gantt) dicoba dengan tiga akun role; temuan dicatat.
-- Bukti:
+- [x] Scaffold Next.js 16 (App Router, TS strict), pnpm, ESLint, Prettier; kunci versi patch semua library di `package.json`.
+- [x] Tailwind v4 + shadcn/ui (new-york), token warna (biru tua, EWS, Gantt), font Inter.
+- [x] Prisma 7: `prisma.config.ts` (URL dari `DIRECT_URL`, perintah seed), client singleton dengan `PrismaPg` (`DATABASE_URL`). Salin `prisma/schema.prisma` dari paket ini.
+- [x] Vitest, Playwright (desktop + 375 px), axe-core; script `lint`, `typecheck`, `test`, `test:e2e`.
+- [x] Repo GitHub + workflow CI (lint, typecheck, test, build).
+- [x] Neon: project region Asia, branch `dev`/`preview`/`main`, autoscaling maks. 0,25 CU.
+- [x] R2: bucket `dev`, `prod`, `backup`; kredensial terpisah untuk backup.
+- [x] Vercel: project terhubung repo, region fungsi Asia (sama dengan Neon), env variable.
+- [x] `.env.example` lengkap; `AGENTS.md` bagian perintah diperbarui.
+- [x] Prototipe layar utama (dashboard, daftar proyek, workspace, Gantt) dicoba dengan tiga akun role; temuan dicatat.
+- Bukti (11 Oktober 2026):
+  - `pnpm lint`: Lulus tanpa error/warning (ESLint 9.39 flat config).
+  - `pnpm typecheck`: Lulus tanpa error (TypeScript 5.9.3 strict, noUncheckedIndexedAccess).
+  - `pnpm test`: Lulus 3/3 test Vitest (`tests/unit/format.test.ts` untuk format rupiah, persen, tanggal WIB).
+  - `pnpm build`: Lulus kompilasi produksi Turbopack Next.js 16.4.0 (5 rute ter-generate).
+  - `pnpm test:e2e`: Lulus 14/14 test Playwright (desktop dan mobile 375px) termasuk audit axe-core bebas pelanggaran WCAG AA.
+  - Prototipe 4 layar aktif dengan role switcher (`SUPER_ADMIN`, `WM_HO_SPECIALIST`, `MANAGEMENT_VIEWER`). Mode Viewer mengunci seluruh tombol mutasi secara konsisten.
+  - Neon Postgres (region Singapore `ap-southeast-1`), Cloudflare R2 (`wm-prjct-files`), dan CI workflow GitHub Actions terkonfigurasi. Commit `58775e7`.
 
 ## F1 — Fondasi (AC-01–06, AC-60–62)
 
