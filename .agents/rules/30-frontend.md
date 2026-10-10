@@ -1,5 +1,5 @@
 ---
-trigger: model_decision
+trigger: always_on
 description: "Pakai saat menulis atau meninjau halaman, komponen UI, form, tabel, Gantt matriks, grafik, design system, aksesibilitas dan tampilan mobile."
 ---
 

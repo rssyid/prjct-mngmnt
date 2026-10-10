@@ -1,5 +1,5 @@
 ---
-trigger: model_decision
+trigger: always_on
 description: "Pakai saat menulis atau meninjau kode server: route handler /api, domain service, Prisma schema/migration, transaksi, audit, R2, Better Auth, keamanan."
 ---
 

@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 216 71% 20%; /* Biru Tua (#0f2c59) */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 216 71% 20%;
+    --radius: 0.5rem;
+
+    /* Semantic EWS */
+    --ews-green: #15803d;
+    --ews-green-bg: #dcfce7;
+    --ews-yellow: #ca8a04;
+    --ews-yellow-bg: #fef9c3;
+    --ews-red: #b91c1c;
+    --ews-red-bg: #fee2e2;
+
+    /* Semantic Gantt */
+    --gantt-baseline: #94a3b8; /* abu-abu */
+    --gantt-rev1: #eab308; /* kuning */
+    --gantt-rev2: #f97316; /* oranye */
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Pola garis untuk sel revisi Gantt */
+.gantt-stripe-rev1 {
+  background: repeating-linear-gradient(
+    45deg,
+    #eab308,
+    #eab308 6px,
+    #fef08a 6px,
+    #fef08a 12px
+  );
+}
+
+.gantt-stripe-rev2 {
+  background: repeating-linear-gradient(
+    45deg,
+    #f97316,
+    #f97316 6px,
+    #fed7aa 6px,
+    #fed7aa 12px
+  );
+}
+
+/* Tabel desktop compact */
+.table-compact th,
+.table-compact td {
+  padding: 0.375rem 0.625rem;
+  font-size: 0.8125rem;
+}

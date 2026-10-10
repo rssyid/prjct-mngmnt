@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, Typecheck, Test, Build
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/wm_test?sslmode=disable"
+      DIRECT_URL: "postgresql://postgres:postgres@localhost:5432/wm_test?sslmode=disable"
+      BETTER_AUTH_SECRET: "ci_secret_dummy_must_be_thirty_two_chars_long"
+      BETTER_AUTH_URL: "http://localhost:3000"
+      R2_ACCOUNT_ID: "dummy_r2_account_id"
+      R2_ACCESS_KEY_ID: "dummy_r2_access_key"
+      R2_SECRET_ACCESS_KEY: "dummy_r2_secret_key"
+      R2_BUCKET: "wm-prjct-files"
+      APP_TIMEZONE: "Asia/Jakarta"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.11.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm prisma:generate
+
+      - name: Run ESLint
+        run: pnpm lint
+
+      - name: Run TypeScript Check
+        run: pnpm typecheck
+
+      - name: Run Unit Tests (Vitest)
+        run: pnpm test
+
+      - name: Run Next.js Build
+        run: pnpm build
