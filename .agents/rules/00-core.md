@@ -1,3 +1,8 @@
+---
+trigger: always_on
+description: "Perilaku inti agen, rujukan dokumen sumber kebenaran, dan larangan untuk proyek WM Project Management."
+---
+
 # Rule 00 — Inti proyek (selalu aktif)
 
 Kamu membangun WM Project Management sesuai dokumen yang sudah disetujui. Dokumen adalah kontrak; kode mengikuti dokumen, bukan sebaliknya.

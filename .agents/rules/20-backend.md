@@ -1,3 +1,8 @@
+---
+trigger: model_decision
+description: "Pakai saat menulis atau meninjau kode server: route handler /api, domain service, Prisma schema/migration, transaksi, audit, R2, Better Auth, keamanan."
+---
+
 # Rule 20 — Backend dan data (aktif saat mengerjakan server, API, Prisma)
 
 Rujukan: @../../docs/02-architecture.md · @../../docs/04-api.md · @../../docs/03-database.md

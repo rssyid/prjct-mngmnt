@@ -1,3 +1,8 @@
+---
+trigger: always_on
+description: "Invarian bisnis: status proyek, approval SAP, bobot dan progres, jadwal, tender/SPK/Paket Kerja, lokasi."
+---
+
 # Rule 10 — Invarian domain (selalu aktif)
 
 Ringkasan aturan yang paling sering dilanggar. Detail lengkap: @../../docs/01-domain.md

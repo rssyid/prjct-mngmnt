@@ -1,6 +1,6 @@
 # Panduan Memakai Paket Ini di Google Antigravity
 
-Paket ini berisi semua hasil planning WM Project Management dalam bentuk yang bisa langsung dibaca agen: dokumen final, schema database lengkap, data awal, aturan agen, workflow per fase, dan daftar tugas.
+Paket ini berisi semua hasil planning WM Project Management dalam bentuk yang bisa langsung dibaca agen: dokumen final, schema database lengkap, data awal, aturan agen, skill per fase, dan daftar tugas.
 
 ## 1. Isi paket
 
@@ -9,17 +9,17 @@ AGENTS.md                      Pintu masuk agen: ringkasan, sumber kebenaran, at
 PANDUAN-ANTIGRAVITY.md         File ini (untuk Anda, bukan untuk agen)
 task.md                        Checklist F0–F7 dengan ID acceptance criteria
 .env.example                   Daftar environment variable (tanpa nilai)
-.agents/rules/                 Aturan agen (masing-masing < 12.000 karakter)
-  00-core.md                   Perilaku inti, rujukan dokumen, larangan
-  10-domain.md                 Invarian bisnis yang paling sering dilanggar
-  20-backend.md                API, transaksi, Prisma 7, R2, keamanan
-  30-frontend.md               shadcn/Tailwind, form, Gantt, design system
-  40-testing.md                Test per AC dan syarat "selesai"
-.agents/workflows/
-  start-phase.md               Mulai fase: baca dokumen, buat rencana, tunggu persetujuan
-  verify-phase.md              Tutup fase: jalankan semua cek, tabel bukti AC, update task.md
-  db-change.md                 Mengubah struktur data dengan aman
-  decision.md                  Menangani hal yang belum diatur dokumen
+.agents/rules/                 Aturan agen, masing-masing diawali YAML frontmatter `trigger`
+  00-core.md                   always_on — perilaku inti, rujukan dokumen, larangan
+  10-domain.md                 always_on — invarian bisnis yang paling sering dilanggar
+  20-backend.md                model_decision — API, transaksi, Prisma 7, R2, keamanan
+  30-frontend.md               model_decision — shadcn/Tailwind, form, Gantt, design system
+  40-testing.md                always_on — test per AC dan syarat "selesai"
+.agents/skills/                Skill (pengganti workflow), dipanggil dengan /nama
+  start-phase/SKILL.md         /start-phase — baca dokumen, buat rencana, tunggu persetujuan
+  verify-phase/SKILL.md        /verify-phase — jalankan semua cek, tabel bukti AC, update task.md
+  db-change/SKILL.md           /db-change — mengubah struktur data dengan aman
+  decision/SKILL.md            /decision — menangani hal yang belum diatur dokumen
 docs/
   01-domain.md                 Glossary, state machine, aturan bisnis (sumber kebenaran utama)
   02-architecture.md           Stack, struktur kode, alur request, lingkungan, risiko
@@ -49,21 +49,21 @@ Delapan file markdown lama (PRD, WORKFLOW, DATABASE, API, design, Rules, RUNBOOK
 2. Salin seluruh isi paket ini ke folder tersebut (termasuk folder tersembunyi `.agents`).
 3. Jalankan `git init`, buat repo privat di GitHub, lalu commit awal berisi paket ini saja.
 4. Di Antigravity: **File → Open Folder** → pilih folder proyek (bukan folder induknya).
-5. Buka panel agen → menu `...` → **Customizations → Rules**. Pastikan kelima file di `.agents/rules` muncul sebagai *Workspace rules*, dan atur semuanya agar selalu aktif (total ukurannya kecil). Jika panel memakai nama mode yang berbeda, pilih mode yang membuat rule berlaku di setiap percakapan.
-6. Periksa tab **Workflows**: keempat workflow dari `.agents/workflows` harus terlihat.
-7. Antigravity versi baru juga membaca `AGENTS.md`. Jika versi Anda belum, sebut `@AGENTS.md` di pesan pertama setiap percakapan.
+5. Buka panel agen → menu `...` → **Customizations → Rules**. Kelima file di `.agents/rules` harus muncul sebagai *Workspace rules*: tiga `always_on` (00, 10, 40) dan dua `model_decision` (20, 30). Jika tidak muncul, periksa bahwa setiap file diawali blok YAML `---` berisi `trigger:` — tanpa itu Antigravity membuang rule tanpa pesan error. Jangan menyimpan file di subfolder `.agents/rules/…`, karena hanya file langsung di folder itu yang dibaca.
+6. Periksa daftar **Skills**: keempat skill dari `.agents/skills` harus terlihat dan bisa dipanggil dengan `/start-phase`, `/verify-phase`, `/db-change`, `/decision`.
+7. `AGENTS.md` di root dibaca otomatis dan selalu aktif; tidak perlu disebut di setiap pesan.
 
 ## 4. Menjalankan satu fase
 
 Kerjakan **satu fase per percakapan agen**. Contoh untuk fase pertama:
 
 1. Mulai percakapan baru, tulis:
-   > Jalankan workflow start-phase untuk F0. Ikuti @AGENTS.md dan @task.md.
+   > /start-phase F0
 2. Agen membaca dokumen dan menyusun rencana. **Tinjau rencananya**: apakah sesuai dokumen, apakah setiap AC fase punya test, apakah ada library di luar stack.
 3. Setujui atau minta perbaikan. Jangan biarkan agen menulis kode sebelum rencana disetujui.
 4. Biarkan agen bekerja langkah demi langkah. Di fase yang menyentuh database, periksa migration yang dibuat sebelum diterapkan.
 5. Setelah selesai, tulis:
-   > Jalankan workflow verify-phase untuk F0.
+   > /verify-phase F0
 6. Periksa tabel bukti AC dan hasil `lint`, `typecheck`, `test`, `build`. Centang di `task.md` hanya yang terbukti.
 7. Commit, push, cek deploy preview di Vercel, lalu lanjut ke fase berikutnya di percakapan baru.
 
@@ -81,7 +81,7 @@ Urutan fase: F0 Persiapan → F1 Fondasi → F2 Proyek & AFCE → F3 Pengadaan �
 
 Agen diinstruksikan berhenti dan bertanya bila dokumen bertentangan atau tidak mencakup sesuatu. Jika itu terjadi:
 
-1. Minta agen menjalankan workflow `decision`: konteks, pilihan, dampak, usulan.
+1. Jalankan `/decision`: agen menjelaskan konteks, pilihan, dampak dan usulan.
 2. Putuskan.
 3. Pastikan agen menambahkan baris di `docs/07-decisions.md` dan memperbarui dokumen 01–06 yang terdampak sebelum melanjutkan.
 
@@ -96,7 +96,14 @@ Jangan menerima perubahan aturan bisnis yang tidak tercatat di dokumen.
 - Contoh uji progres 65,4% (AC-49) adalah alarm cepat: jika angka ini berubah, ada yang salah di perhitungan.
 - Simpan dokumen planning asli (Claude Docs) sebagai arsip; yang dipakai agen adalah folder `docs/` di repo.
 
-## 8. Risiko yang sudah diterima
+## 8. Catatan versi Antigravity
+
+- Rule di `.agents/rules/*.md` wajib diawali YAML frontmatter dengan `trigger` yang valid (`always_on`, `model_decision`, `glob`, `manual`; huruf kecil dengan garis bawah). `AGENTS.md` tidak memakai frontmatter dan selalu aktif.
+- Batas ukuran rule 24.000 byte per file dan total 20.000 token untuk semua rule `always_on`; rule di paket ini jauh di bawah batas itu.
+- Workflow lama (`.agents/workflows/`) berhenti berfungsi pada 19 Oktober 2026 dan digantikan skill (`.agents/skills/<nama>/SKILL.md`). Paket ini sudah memakai format skill.
+- Di dalam rule, `@path` hanya menunjuk file (tidak menyalin isinya), sehingga dokumen panjang di `docs/` tidak memakan jatah konteks; agen membacanya saat perlu.
+
+## 9. Risiko yang sudah diterima
 
 - Vercel Hobby dibatasi untuk pemakaian non-komersial. Untuk proyek pribadi ini sesuai; jika kelak dipakai resmi oleh perusahaan, pindah ke Vercel Pro atau hosting Node.js lain (aplikasi sudah dirancang portabel).
 - Neon Free: database ditangguhkan bila kuota compute bulanan habis, restore hanya 6 jam. Karena itu backup harian ke R2 dan pengecekan pemakaian mingguan wajib dijalankan (F7).

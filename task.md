@@ -1,6 +1,6 @@
 # task.md — WM Project Management
 
-Semua item belum dikerjakan. Centang hanya dengan bukti (lihat workflow `verify-phase`). Tulis tanggal dan ringkasan bukti di bawah setiap fase saat selesai.
+Semua item belum dikerjakan. Centang hanya dengan bukti (lihat skill `/verify-phase`). Tulis tanggal dan ringkasan bukti di bawah setiap fase saat selesai.
 
 ## F0 — Persiapan
 

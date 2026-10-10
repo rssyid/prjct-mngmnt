@@ -28,7 +28,7 @@ Next.js 16 (App Router, runtime Node.js, TypeScript strict) · Better Auth (emai
 
 ## Aturan kerja
 
-- Kerjakan satu fase per sesi sesuai `task.md`. Mulai dengan workflow `start-phase`, akhiri dengan `verify-phase`.
+- Kerjakan satu fase per sesi sesuai `task.md`. Mulai dengan skill `/start-phase`, akhiri dengan `/verify-phase` (folder `.agents/skills/`). Untuk aturan yang belum jelas pakai `/decision`; untuk perubahan database pakai `/db-change`.
 - Buat rencana dan minta persetujuan sebelum menulis kode untuk fase atau perubahan besar.
 - Jangan mencentang `task.md` tanpa bukti: lint, typecheck, test dan build lulus, dan AC terkait punya test.
 - UI dan pesan error dalam bahasa Indonesia; kode, nama variabel dan commit dalam bahasa Inggris.

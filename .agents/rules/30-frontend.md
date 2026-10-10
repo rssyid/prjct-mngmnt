@@ -1,3 +1,8 @@
+---
+trigger: model_decision
+description: "Pakai saat menulis atau meninjau halaman, komponen UI, form, tabel, Gantt matriks, grafik, design system, aksesibilitas dan tampilan mobile."
+---
+
 # Rule 30 — Frontend dan UI (aktif saat mengerjakan halaman dan komponen)
 
 Rujukan: @../../docs/05-ui.md · @../../docs/01-domain.md §11 (Gantt)

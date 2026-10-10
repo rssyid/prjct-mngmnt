@@ -1,0 +1,20 @@
+---
+name: start-phase
+description: "Memulai satu fase implementasi (F0–F7): membaca dokumen terkait, menyusun rencana yang memetakan setiap acceptance criteria ke test, lalu menunggu persetujuan sebelum menulis kode. Pakai di awal setiap fase."
+---
+
+# start-phase
+
+Pakai di awal setiap fase. Contoh pemanggilan: `/start-phase F2`.
+
+1. Baca `task.md` dan pastikan fase sebelumnya sudah dicentang lengkap dengan bukti. Jika belum, berhenti dan laporkan.
+2. Baca `docs/06-phases-acceptance.md` bagian fase ini dan daftar AC-nya.
+3. Baca dokumen area terkait: `docs/01-domain.md` (selalu), lalu `docs/04-api.md`, `docs/05-ui.md`, `prisma/schema.prisma` sesuai isi fase.
+4. Tulis rencana fase sebagai artefak:
+   - langkah berurutan (kecil, bisa di-commit terpisah);
+   - file/modul yang dibuat atau diubah;
+   - perubahan schema/migration (jika ada);
+   - test yang akan ditulis, dipetakan ke setiap AC fase;
+   - pertanyaan atau konflik dokumen yang ditemukan.
+5. Tunggu persetujuan pengguna. Jangan menulis kode sebelum disetujui.
+6. Setelah disetujui, kerjakan langkah demi langkah; jalankan test terkait setiap selesai satu langkah; commit per langkah.

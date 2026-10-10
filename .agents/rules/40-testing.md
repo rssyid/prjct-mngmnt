@@ -1,3 +1,8 @@
+---
+trigger: always_on
+description: "Aturan test per acceptance criteria dan syarat sebelum menyatakan pekerjaan selesai."
+---
+
 # Rule 40 — Test dan verifikasi (selalu aktif)
 
 Rujukan: @../../docs/06-phases-acceptance.md
