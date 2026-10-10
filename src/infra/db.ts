@@ -1,6 +1,16 @@
+import process from 'node:process';
+import { existsSync } from 'node:fs';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@/generated/prisma/client';
+
+if (!process.env.DATABASE_URL) {
+  if (existsSync('.env')) {
+    process.loadEnvFile('.env');
+  } else if (existsSync('.env.local')) {
+    process.loadEnvFile('.env.local');
+  }
+}
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
