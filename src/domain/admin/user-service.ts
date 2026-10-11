@@ -56,7 +56,7 @@ export async function createUser(actorId: string, input: CreateUserInput) {
         id: `acc_${newUser.id}`,
         userId: newUser.id,
         providerId: 'credential',
-        accountId: newUser.email,
+        accountId: newUser.id,
         password: hashedPassword,
       },
     });
@@ -169,7 +169,7 @@ export async function resetUserPassword(
           id: `acc_${userId}_${Date.now()}`,
           userId,
           providerId: 'credential',
-          accountId: user.email,
+          accountId: userId,
           password: hashedPassword,
         },
       });

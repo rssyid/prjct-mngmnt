@@ -68,6 +68,7 @@ export default function GantiPasswordPage() {
               <Input
                 id="newPassword"
                 type="password"
+                autoComplete="new-password"
                 placeholder="Minimal 8 karakter"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -81,6 +82,7 @@ export default function GantiPasswordPage() {
               <Input
                 id="confirmPassword"
                 type="password"
+                autoComplete="new-password"
                 placeholder="Ketik ulang password baru"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}

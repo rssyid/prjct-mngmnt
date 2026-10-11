@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
             id: `acc_${user.id}_${Date.now()}`,
             userId: user.id,
             providerId: 'credential',
-            accountId: user.email,
+            accountId: user.id,
             password: hashedPassword,
           },
         });

@@ -288,7 +288,15 @@ export async function runSeed(client: PrismaClient = defaultPrisma) {
         id: `acc_${adminUser.id}`,
         userId: adminUser.id,
         providerId: 'credential',
-        accountId: adminUser.email,
+        accountId: adminUser.id,
+        password: hashedPassword,
+      },
+    });
+  } else {
+    await client.account.update({
+      where: { id: existingAcc.id },
+      data: {
+        accountId: adminUser.id,
         password: hashedPassword,
       },
     });
