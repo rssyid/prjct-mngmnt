@@ -11,13 +11,13 @@ interface TabsContextValue {
 const TabsContext = React.createContext<TabsContextValue | undefined>(undefined);
 
 export interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
-  defaultValue: string;
+  defaultValue?: string;
   value?: string;
   onValueChange?: (value: string) => void;
 }
 
 export function Tabs({
-  defaultValue,
+  defaultValue = '',
   value: controlledValue,
   onValueChange,
   className,

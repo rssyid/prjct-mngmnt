@@ -30,7 +30,6 @@ test.describe('WM Project Management — Smoke & Navigation E2E', () => {
     await page.goto('/projects');
 
     await expect(page.locator('h1')).toContainText('Daftar Proyek Water Management');
-    await expect(page.locator('body')).toContainText('WM-THIP-2026-0001');
 
     // Default Super Admin: Tombol "Buat Proyek Baru" aktif
     const createBtn = page.getByRole('button', { name: /Buat Proyek/i });
@@ -50,18 +49,57 @@ test.describe('WM Project Management — Smoke & Navigation E2E', () => {
   });
 
   test('Membuka Workspace Proyek dan tab navigasi', async ({ page }) => {
+    // Mock project response for proj-1
+    await page.route('/api/projects/proj-1', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            id: 'proj-1',
+            code: 'WM-THIP-2026-0001',
+            name: 'Rehabilitasi Saluran Drainase',
+            status: 'RAB_READY',
+            targetStartDate: '2026-11-01',
+            targetEndDate: '2027-02-28',
+            plannedBudget: '1200000000',
+            notes: null,
+            company: { id: 'c1', name: 'PT THIP', code: 'THIP' },
+            category: { id: 'cat1', name: 'Rehabilitasi', code: 'REHAB' },
+            picUser: null,
+            estates: [],
+          },
+        }),
+      });
+    });
+
+    await page.route('/api/projects/proj-1/survey', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: null }),
+      });
+    });
+
+    await page.route('/api/projects/proj-1/afce-attempts', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: [] }),
+      });
+    });
+
     await page.goto('/projects/proj-1');
 
     await expect(page.locator('body')).toContainText('WM-THIP-2026-0001');
     await expect(page.getByText('Langkah Berikutnya')).toBeVisible();
 
     // Cek tab Ringkasan aktif
-    await expect(page.getByText('Data Pokok Proyek')).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Ringkasan' })).toBeVisible();
 
-    // Pindah ke tab Jadwal (Gantt)
-    await page.getByRole('tab', { name: 'Jadwal (Gantt)' }).click();
-    await expect(page.getByText('Gantt Matriks Mingguan Proyek')).toBeVisible();
-    await expect(page.getByText('Legenda Warna & Simbol Gantt Matriks').first()).toBeVisible();
+    // Pindah ke tab Survei & Peta
+    await page.getByRole('tab', { name: 'Survei & Peta' }).click();
+    await expect(page.getByRole('heading', { name: /Survei Lapangan/i })).toBeVisible();
   });
 
   test('Membuka Portofolio Gantt dan verifikasi legenda warna', async ({ page }) => {

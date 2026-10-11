@@ -35,45 +35,15 @@ describe('AFCE, BOQ, Approval Snapshot & Submission Flow (AC-16 - AC-20)', () =>
       },
     });
 
-    // 2. Company
-    const comp = await prisma.company.create({
-      data: {
-        code: `CA_${timestamp.toString().slice(-4)}`,
-        name: `PT Company AFCE ${timestamp}`,
-      },
-    });
+    // 2. Gunakan Company, Category, dan Estate dari seed
+    const comp = await prisma.company.findFirstOrThrow();
     testCompanyId = comp.id;
 
-    // 3. Category
-    const cat = await prisma.projectCategory.create({
-      data: {
-        code: `CAT_${timestamp.toString().slice(-4)}`,
-        name: `Kategori AFCE ${timestamp}`,
-      },
-    });
+    const cat = await prisma.projectCategory.findFirstOrThrow();
     testCategoryId = cat.id;
 
-    // 4. Region & Wilayah & Estate
-    const reg = await prisma.region.findFirst();
-    let regId = reg?.id;
-    if (!regId) {
-      const newReg = await prisma.region.create({
-        data: { code: `REG_${timestamp}`, name: 'Region Test', ops: 'SUMATERA' },
-      });
-      regId = newReg.id;
-    }
-
-    const wil = await prisma.wilayah.create({
-      data: { regionId: regId, name: `Wilayah AFCE ${timestamp}` },
-    });
-
-    const est = await prisma.estate.create({
-      data: {
-        companyId: testCompanyId,
-        wilayahId: wil.id,
-        code: `ES_${timestamp.toString().slice(-4)}`,
-        name: `Estate AFCE ${timestamp}`,
-      },
+    const est = await prisma.estate.findFirstOrThrow({
+      where: { companyId: testCompanyId },
     });
     testEstateId = est.id;
 
@@ -141,6 +111,39 @@ describe('AFCE, BOQ, Approval Snapshot & Submission Flow (AC-16 - AC-20)', () =>
   }, 30000);
 
   afterAll(async () => {
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe("SET LOCAL app.allow_purge = 'on'");
+      if (testProjectId) {
+        await tx.approvalRecord.deleteMany({
+          where: { levelSnapshot: { afceAttempt: { projectId: testProjectId } } },
+        });
+        await tx.approvalLevelSnapshot.deleteMany({
+          where: { afceAttempt: { projectId: testProjectId } },
+        });
+        await tx.boqItem.deleteMany({
+          where: { afceAttempt: { projectId: testProjectId } },
+        });
+        await tx.afceAttempt.deleteMany({
+          where: { projectId: testProjectId },
+        });
+        await tx.projectStatusHistory.deleteMany({
+          where: { projectId: testProjectId },
+        });
+        await tx.projectEstate.deleteMany({
+          where: { projectId: testProjectId },
+        });
+        await tx.project.deleteMany({
+          where: { id: testProjectId },
+        });
+      }
+      await tx.approvalMatrixTierLevel.deleteMany({
+        where: { tier: { name: { startsWith: 'Tier AFCE Uji' } } },
+      });
+      await tx.approvalMatrixTier.deleteMany({
+        where: { name: { startsWith: 'Tier AFCE Uji' } },
+      });
+    });
+
     await prisma.user.update({
       where: { id: testUserId },
       data: { isActive: false },

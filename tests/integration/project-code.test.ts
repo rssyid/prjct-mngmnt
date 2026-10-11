@@ -21,16 +21,27 @@ describe('Atomic Project Code Generation Concurrency (AC-10)', () => {
       },
     });
 
-    // 2. Gunakan Company, Category, dan Estate yang sudah di-seed
-    const comp = await prisma.company.findFirstOrThrow();
+    // 2. Gunakan Company dan Estate khusus agar counter 100% terisolasi
+    const comp = await prisma.company.create({
+      data: {
+        code: `PC_${timestamp.toString().slice(-4)}`,
+        name: `PT Project Code ${timestamp}`,
+      },
+    });
     testCompanyId = comp.id;
     testCompanyCode = comp.code;
 
     const cat = await prisma.projectCategory.findFirstOrThrow();
     testCategoryId = cat.id;
 
-    const est = await prisma.estate.findFirstOrThrow({
-      where: { companyId: testCompanyId },
+    const wil = await prisma.wilayah.findFirstOrThrow();
+    const est = await prisma.estate.create({
+      data: {
+        companyId: testCompanyId,
+        wilayahId: wil.id,
+        code: `EC_${timestamp.toString().slice(-4)}`,
+        name: `Estate Code ${timestamp}`,
+      },
     });
     testEstateId = est.id;
   });
@@ -48,6 +59,9 @@ describe('Atomic Project Code Generation Concurrency (AC-10)', () => {
         await tx.projectEstate.deleteMany({ where: { projectId: { in: pIds } } });
         await tx.project.deleteMany({ where: { id: { in: pIds } } });
       }
+      await tx.projectCodeCounter.deleteMany({ where: { companyId: testCompanyId } });
+      if (testEstateId) await tx.estate.deleteMany({ where: { id: testEstateId } });
+      if (testCompanyId) await tx.company.deleteMany({ where: { id: testCompanyId } });
     });
 
     await prisma.user.update({

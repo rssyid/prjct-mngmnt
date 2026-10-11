@@ -23,49 +23,19 @@ describe('Project Survey & AFCE Locking Gate (AC-14)', () => {
       },
     });
 
-    // 2. Company
-    const comp = await prisma.company.create({
-      data: {
-        code: `CS_${timestamp.toString().slice(-4)}`,
-        name: `PT Company Survey ${timestamp}`,
-      },
-    });
+    // 2. Gunakan Company, Category, dan Estate dari seed
+    const comp = await prisma.company.findFirstOrThrow();
     testCompanyId = comp.id;
 
-    // 3. Category
-    const cat = await prisma.projectCategory.create({
-      data: {
-        code: `CAT_${timestamp.toString().slice(-4)}`,
-        name: `Kategori Survey ${timestamp}`,
-      },
-    });
+    const cat = await prisma.projectCategory.findFirstOrThrow();
     testCategoryId = cat.id;
 
-    // 4. Region & Wilayah & Estate
-    const reg = await prisma.region.findFirst();
-    let regId = reg?.id;
-    if (!regId) {
-      const newReg = await prisma.region.create({
-        data: { code: `REG_${timestamp}`, name: 'Region Test', ops: 'SUMATERA' },
-      });
-      regId = newReg.id;
-    }
-
-    const wil = await prisma.wilayah.create({
-      data: { regionId: regId, name: `Wilayah Survey ${timestamp}` },
-    });
-
-    const est = await prisma.estate.create({
-      data: {
-        companyId: testCompanyId,
-        wilayahId: wil.id,
-        code: `ES_${timestamp.toString().slice(-4)}`,
-        name: `Estate Survey ${timestamp}`,
-      },
+    const est = await prisma.estate.findFirstOrThrow({
+      where: { companyId: testCompanyId },
     });
     testEstateId = est.id;
 
-    // 5. Create Project
+    // 3. Create Project
     const project = await createProject(
       {
         name: `Proyek Uji Survei ${timestamp}`,
@@ -83,6 +53,20 @@ describe('Project Survey & AFCE Locking Gate (AC-14)', () => {
   });
 
   afterAll(async () => {
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe("SET LOCAL app.allow_purge = 'on'");
+      if (testProjectId) {
+        await tx.approvalLevelSnapshot.deleteMany({
+          where: { afceAttempt: { projectId: testProjectId } },
+        });
+        await tx.afceAttempt.deleteMany({ where: { projectId: testProjectId } });
+        await tx.survey.deleteMany({ where: { projectId: testProjectId } });
+        await tx.projectStatusHistory.deleteMany({ where: { projectId: testProjectId } });
+        await tx.projectEstate.deleteMany({ where: { projectId: testProjectId } });
+        await tx.project.deleteMany({ where: { id: testProjectId } });
+      }
+    });
+
     await prisma.user.update({
       where: { id: testUserId },
       data: { isActive: false },

@@ -45,5 +45,5 @@ describe('Seed Idempotency and Location Counts (AC-61)', () => {
     expect(wilayah2).toBe(18);
     expect(companies2).toBe(27);
     expect(estates2).toBe(63);
-  }, 60000); // Batas waktu 60 detik untuk transaksi jaringan
+  }, 180000); // Batas waktu 180 detik untuk transaksi jaringan (remote Neon DB)
 });

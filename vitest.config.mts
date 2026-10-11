@@ -10,6 +10,9 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     globals: true,
+    fileParallelism: false,
+    testTimeout: 30000,
+    hookTimeout: 30000,
     include: [
       'tests/unit/**/*.{test,spec}.{ts,tsx}',
       'tests/integration/**/*.{test,spec}.{ts,tsx}',

@@ -32,7 +32,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { label: 'Daftar Proyek', href: '/projects' },
     { label: 'Portofolio Gantt', href: '/portfolio' },
     { label: 'Master Data', href: '/master' },
-    ...(role === 'SUPER_ADMIN' ? [{ label: 'Admin Pengguna', href: '/admin/users' }] : []),
+    ...(role === 'SUPER_ADMIN'
+      ? [
+          { label: 'Admin Pengguna', href: '/admin/users' },
+          { label: 'Matriks Approval', href: '/admin/approval-matrix' },
+        ]
+      : []),
   ];
 
   return (

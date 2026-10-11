@@ -15,6 +15,7 @@ import { DomainError } from '@/shared/errors';
 describe('SAP Approval Decisions, Rejection, and Final Approval Workflow (AC-21 - AC-24)', () => {
   const timestamp = Date.now();
   const testUserId = `user_dec_${timestamp}`;
+  const createdProjectIds: string[] = [];
   let testCompanyId = '';
   let testCategoryId = '';
   let testEstateId = '';
@@ -32,45 +33,15 @@ describe('SAP Approval Decisions, Rejection, and Final Approval Workflow (AC-21 
       },
     });
 
-    // 2. Company
-    const comp = await prisma.company.create({
-      data: {
-        code: `CD_${timestamp.toString().slice(-4)}`,
-        name: `PT Company Decision ${timestamp}`,
-      },
-    });
+    // 2. Company, Category, Estate dari seed
+    const comp = await prisma.company.findFirstOrThrow();
     testCompanyId = comp.id;
 
-    // 3. Category
-    const cat = await prisma.projectCategory.create({
-      data: {
-        code: `CAT_${timestamp.toString().slice(-4)}`,
-        name: `Kategori Decision ${timestamp}`,
-      },
-    });
+    const cat = await prisma.projectCategory.findFirstOrThrow();
     testCategoryId = cat.id;
 
-    // 4. Region & Wilayah & Estate
-    const reg = await prisma.region.findFirst();
-    let regId = reg?.id;
-    if (!regId) {
-      const newReg = await prisma.region.create({
-        data: { code: `REG_${timestamp}`, name: 'Region Test', ops: 'SUMATERA' },
-      });
-      regId = newReg.id;
-    }
-
-    const wil = await prisma.wilayah.create({
-      data: { regionId: regId, name: `Wilayah Dec ${timestamp}` },
-    });
-
-    const est = await prisma.estate.create({
-      data: {
-        companyId: testCompanyId,
-        wilayahId: wil.id,
-        code: `ED_${timestamp.toString().slice(-4)}`,
-        name: `Estate Dec ${timestamp}`,
-      },
+    const est = await prisma.estate.findFirstOrThrow({
+      where: { companyId: testCompanyId },
     });
     testEstateId = est.id;
 
@@ -112,6 +83,42 @@ describe('SAP Approval Decisions, Rejection, and Final Approval Workflow (AC-21 
   }, 30000);
 
   afterAll(async () => {
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe("SET LOCAL app.allow_purge = 'on'");
+      for (const projId of createdProjectIds) {
+        await tx.approvalRecord.deleteMany({
+          where: { levelSnapshot: { afceAttempt: { projectId: projId } } },
+        });
+        await tx.approvalLevelSnapshot.deleteMany({
+          where: { afceAttempt: { projectId: projId } },
+        });
+        await tx.boqItem.deleteMany({
+          where: { afceAttempt: { projectId: projId } },
+        });
+        await tx.afceAttempt.deleteMany({
+          where: { projectId: projId },
+        });
+        await tx.budgetEntry.deleteMany({
+          where: { projectId: projId },
+        });
+        await tx.projectStatusHistory.deleteMany({
+          where: { projectId: projId },
+        });
+        await tx.projectEstate.deleteMany({
+          where: { projectId: projId },
+        });
+        await tx.project.deleteMany({
+          where: { id: projId },
+        });
+      }
+      await tx.approvalMatrixTierLevel.deleteMany({
+        where: { tier: { name: { startsWith: 'Tier Dec ' } } },
+      });
+      await tx.approvalMatrixTier.deleteMany({
+        where: { name: { startsWith: 'Tier Dec ' } },
+      });
+    });
+
     await prisma.user.update({
       where: { id: testUserId },
       data: { isActive: false },
@@ -133,6 +140,7 @@ describe('SAP Approval Decisions, Rejection, and Final Approval Workflow (AC-21 
       },
       testUserId
     );
+    createdProjectIds.push(proj.id);
 
     await transitionProjectStatus({
       projectId: proj.id,
@@ -231,6 +239,7 @@ describe('SAP Approval Decisions, Rejection, and Final Approval Workflow (AC-21 
       },
       testUserId
     );
+    createdProjectIds.push(proj.id);
 
     await transitionProjectStatus({
       projectId: proj.id,
@@ -334,6 +343,7 @@ describe('SAP Approval Decisions, Rejection, and Final Approval Workflow (AC-21 
       },
       testUserId
     );
+    createdProjectIds.push(proj.id);
 
     await transitionProjectStatus({
       projectId: proj.id,

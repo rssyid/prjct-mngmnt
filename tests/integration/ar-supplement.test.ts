@@ -16,11 +16,13 @@ import { DomainError } from '@/shared/errors';
 describe('AR Supplement & Budget Expansion Integration Test (AC-25)', () => {
   const timestamp = Date.now();
   const testUserId = `user_ar_${timestamp}`;
+  const createdProjectIds: string[] = [];
   let testCompanyId = '';
   let testCategoryId = '';
   let testEstateId = '';
   let pos1Id = '';
   let pos2Id = '';
+  let createdTierId = '';
 
   beforeAll(async () => {
     // 1. User
@@ -33,58 +35,94 @@ describe('AR Supplement & Budget Expansion Integration Test (AC-25)', () => {
       },
     });
 
-    // 2. Company
-    const comp = await prisma.company.create({
-      data: {
-        code: `CA_${timestamp.toString().slice(-4)}`,
-        name: `PT Company AR ${timestamp}`,
-      },
-    });
+    // 2. Company, Category, Estate dari seed
+    const comp = await prisma.company.findFirstOrThrow();
     testCompanyId = comp.id;
 
-    // 3. Category
-    const cat = await prisma.projectCategory.create({
-      data: {
-        code: `CAT_${timestamp.toString().slice(-4)}`,
-        name: `Kategori AR ${timestamp}`,
-      },
-    });
+    const cat = await prisma.projectCategory.findFirstOrThrow();
     testCategoryId = cat.id;
 
-    // 4. Region & Wilayah & Estate
-    const reg = await prisma.region.findFirst();
-    let regId = reg?.id;
-    if (!regId) {
-      const newReg = await prisma.region.create({
-        data: { code: `REG_${timestamp}`, name: 'Region Test AR', ops: 'SUMATERA' },
-      });
-      regId = newReg.id;
-    }
-
-    const wil = await prisma.wilayah.create({
-      data: { regionId: regId, name: `Wilayah AR ${timestamp}` },
-    });
-
-    const est = await prisma.estate.create({
-      data: {
-        companyId: testCompanyId,
-        wilayahId: wil.id,
-        code: `EA_${timestamp.toString().slice(-4)}`,
-        name: `Estate AR ${timestamp}`,
-      },
+    const est = await prisma.estate.findFirstOrThrow({
+      where: { companyId: testCompanyId },
     });
     testEstateId = est.id;
 
-    // 5. Positions (ambil dari master seed)
+    // 3. Positions (ambil dari master seed)
     const positions = await prisma.approvalPosition.findMany({
       orderBy: { rank: 'asc' },
       take: 2,
     });
     pos1Id = positions[0]!.id;
     pos2Id = positions[1]!.id;
+
+    // 4. Pastikan ada tier AR aktif untuk range 0 - 500 Jt
+    const existingTier = await prisma.approvalMatrixTier.findFirst({
+      where: {
+        isActive: true,
+        forArSupplement: true,
+        minAmount: { lte: 80000000 },
+        OR: [{ maxAmount: null }, { maxAmount: { gt: 175000000 } }],
+      },
+    });
+
+    if (!existingTier) {
+      const newTier = await prisma.approvalMatrixTier.create({
+        data: {
+          name: `Tier AR Uji 0-500 Jt ${timestamp}`,
+          forAfce: false,
+          forArSupplement: true,
+          minAmount: 0,
+          maxAmount: 500000000,
+          isActive: true,
+          levels: {
+            create: [
+              { levelNo: 1, positionId: pos1Id },
+              { levelNo: 2, positionId: pos2Id },
+            ],
+          },
+        },
+      });
+      createdTierId = newTier.id;
+    }
   }, 30000);
 
   afterAll(async () => {
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe("SET LOCAL app.allow_purge = 'on'");
+      for (const projId of createdProjectIds) {
+        await tx.approvalRecord.deleteMany({
+          where: { levelSnapshot: { arSupplement: { projectId: projId } } },
+        });
+        await tx.approvalLevelSnapshot.deleteMany({
+          where: { arSupplement: { projectId: projId } },
+        });
+        await tx.budgetEntry.deleteMany({
+          where: { projectId: projId },
+        });
+        await tx.arSupplement.deleteMany({
+          where: { projectId: projId },
+        });
+        await tx.projectStatusHistory.deleteMany({
+          where: { projectId: projId },
+        });
+        await tx.projectEstate.deleteMany({
+          where: { projectId: projId },
+        });
+        await tx.project.deleteMany({
+          where: { id: projId },
+        });
+      }
+
+      if (createdTierId) {
+        await tx.approvalMatrixTierLevel.deleteMany({
+          where: { tierId: createdTierId },
+        });
+        await tx.approvalMatrixTier.delete({
+          where: { id: createdTierId },
+        });
+      }
+    });
+
     await prisma.user
       .update({
         where: { id: testUserId },
@@ -108,6 +146,7 @@ describe('AR Supplement & Budget Expansion Integration Test (AC-25)', () => {
       },
       testUserId
     );
+    createdProjectIds.push(proj.id);
 
     await transitionProjectStatus({
       projectId: proj.id,
@@ -131,7 +170,9 @@ describe('AR Supplement & Budget Expansion Integration Test (AC-25)', () => {
     );
   });
 
-  it('AC-25 mencatat AR tambahan sebagai suplemen terpisah dengan tier tersendiri, mendukung penyesuaian DRAFT, dan submit', async () => {
+  it(
+    'AC-25 mencatat AR tambahan sebagai suplemen terpisah dengan tier tersendiri, mendukung penyesuaian DRAFT, dan submit',
+    async () => {
     // 1. Setup Proyek aktif
     const proj = await createProject(
       {
@@ -146,6 +187,7 @@ describe('AR Supplement & Budget Expansion Integration Test (AC-25)', () => {
       },
       testUserId
     );
+    createdProjectIds.push(proj.id);
 
     await transitionProjectStatus({
       projectId: proj.id,
@@ -297,7 +339,7 @@ describe('AR Supplement & Budget Expansion Integration Test (AC-25)', () => {
     expect(budgetSummary.arEntries[0]?.amount.toString()).toBe('175000000');
     // Total official budget = 800 Jt + 175 Jt = 975 Jt
     expect(budgetSummary.totalOfficialBudget.toString()).toBe('975000000');
-  });
+  }, 30000);
 
   it('AC-25 jika AR tambahan ditolak, status AR menjadi DITOLAK tanpa mengubah anggaran resmi atau status proyek', async () => {
     // 1. Setup Proyek
@@ -314,6 +356,7 @@ describe('AR Supplement & Budget Expansion Integration Test (AC-25)', () => {
       },
       testUserId
     );
+    createdProjectIds.push(proj.id);
 
     await transitionProjectStatus({
       projectId: proj.id,
@@ -393,7 +436,7 @@ describe('AR Supplement & Budget Expansion Integration Test (AC-25)', () => {
       where: { id: proj.id },
     });
     expect(projCheck.status).toBe('AFCE_AR_APPROVED');
-  });
+  }, 30000);
 
   it('memastikan trigger database menolak update atau delete pada budget entry yang sudah tercatat', async () => {
     const proj = await createProject(
@@ -409,6 +452,7 @@ describe('AR Supplement & Budget Expansion Integration Test (AC-25)', () => {
       },
       testUserId
     );
+    createdProjectIds.push(proj.id);
 
     const entry = await prisma.budgetEntry.create({
       data: {
