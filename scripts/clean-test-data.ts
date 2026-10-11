@@ -27,57 +27,83 @@ async function cleanup() {
   const compIds = strayComps.map((c) => c.id);
   const estateIds = strayEstates.map((e) => e.id);
 
-  const projects = await prisma.project.findMany({
-    where: {
-      OR: [
-        { companyId: { in: compIds } },
-        { estates: { some: { estateId: { in: estateIds } } } },
-      ],
-    },
-    select: { id: true },
-  });
-  const projectIds = projects.map((p) => p.id);
-  console.log(`Found ${projectIds.length} stray projects`);
+  if (compIds.length > 0 || estateIds.length > 0) {
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe("SET LOCAL app.allow_purge = 'on'");
 
-  await prisma.$transaction(async (tx) => {
-    await tx.$executeRawUnsafe("SET LOCAL app.allow_purge = 'on'");
+      // Find all projects under stray companies or stray estates
+      const strayProjects = await tx.project.findMany({
+        where: {
+          OR: [
+            { companyId: { in: compIds } },
+            { estates: { some: { estateId: { in: estateIds } } } },
+          ],
+        },
+        select: { id: true },
+      });
+      const projIds = strayProjects.map((p) => p.id);
+      console.log(`Found ${projIds.length} stray projects`);
 
-    if (projectIds.length > 0) {
-      await tx.survey.deleteMany({
-        where: { projectId: { in: projectIds } },
-      });
-      await tx.projectStatusHistory.deleteMany({
-        where: { projectId: { in: projectIds } },
-      });
-      await tx.projectEstate.deleteMany({
-        where: { projectId: { in: projectIds } },
-      });
-      await tx.project.deleteMany({
-        where: { id: { in: projectIds } },
-      });
-    }
+      if (projIds.length > 0) {
+        await tx.approvalRecord.deleteMany({
+          where: {
+            levelSnapshot: {
+              afceAttempt: { projectId: { in: projIds } },
+            },
+          },
+        });
+        await tx.approvalLevelSnapshot.deleteMany({
+          where: {
+            afceAttempt: { projectId: { in: projIds } },
+          },
+        });
+        await tx.boqItem.deleteMany({
+          where: {
+            afceAttempt: { projectId: { in: projIds } },
+          },
+        });
+        await tx.afceAttempt.deleteMany({
+          where: { projectId: { in: projIds } },
+        });
+        await tx.survey.deleteMany({
+          where: { projectId: { in: projIds } },
+        });
+        await tx.budgetEntry.deleteMany({
+          where: { projectId: { in: projIds } },
+        });
+        await tx.projectStatusHistory.deleteMany({
+          where: { projectId: { in: projIds } },
+        });
+        await tx.projectEstate.deleteMany({
+          where: { projectId: { in: projIds } },
+        });
+        await tx.project.deleteMany({
+          where: { id: { in: projIds } },
+        });
+      }
 
-    if (estateIds.length > 0) {
-      await tx.projectEstate.deleteMany({
-        where: { estateId: { in: estateIds } },
-      });
-      await tx.block.deleteMany({
-        where: { estateId: { in: estateIds } },
-      });
-      await tx.estate.deleteMany({
-        where: { id: { in: estateIds } },
-      });
-    }
+      if (estateIds.length > 0) {
+        await tx.projectEstate.deleteMany({
+          where: { estateId: { in: estateIds } },
+        });
+        await tx.block.deleteMany({
+          where: { estateId: { in: estateIds } },
+        });
+        await tx.estate.deleteMany({
+          where: { id: { in: estateIds } },
+        });
+      }
 
-    if (compIds.length > 0) {
-      await tx.projectCodeCounter.deleteMany({
-        where: { companyId: { in: compIds } },
-      });
-      await tx.company.deleteMany({
-        where: { id: { in: compIds } },
-      });
-    }
-  });
+      if (compIds.length > 0) {
+        await tx.projectCodeCounter.deleteMany({
+          where: { companyId: { in: compIds } },
+        });
+        await tx.company.deleteMany({
+          where: { id: { in: compIds } },
+        });
+      }
+    });
+  }
 
   // 3. Delete stray wilayah
   const strayWil = await prisma.wilayah.findMany({
