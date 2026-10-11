@@ -21,53 +21,35 @@ describe('Atomic Project Code Generation Concurrency (AC-10)', () => {
       },
     });
 
-    // 2. Company
-    const comp = await prisma.company.create({
-      data: {
-        code: testCompanyCode,
-        name: `PT Test Code ${timestamp}`,
-      },
-    });
+    // 2. Gunakan Company, Category, dan Estate yang sudah di-seed
+    const comp = await prisma.company.findFirstOrThrow();
     testCompanyId = comp.id;
+    testCompanyCode = comp.code;
 
-    // 3. Category
-    const cat = await prisma.projectCategory.create({
-      data: {
-        code: `CAT_${timestamp.toString().slice(-4)}`,
-        name: `Kategori Code ${timestamp}`,
-      },
-    });
+    const cat = await prisma.projectCategory.findFirstOrThrow();
     testCategoryId = cat.id;
 
-    // 4. Region & Wilayah & Estate
-    const reg = await prisma.region.findFirst();
-    let regId = reg?.id;
-    if (!regId) {
-      const newReg = await prisma.region.create({
-        data: { code: `REG_${timestamp}`, name: 'Region Test', ops: 'SUMATERA' },
-      });
-      regId = newReg.id;
-    }
-
-    const wil = await prisma.wilayah.create({
-      data: {
-        regionId: regId,
-        name: `Wilayah Code ${timestamp}`,
-      },
-    });
-
-    const est = await prisma.estate.create({
-      data: {
-        companyId: testCompanyId,
-        wilayahId: wil.id,
-        code: `EST_${timestamp.toString().slice(-4)}`,
-        name: `Estate Code ${timestamp}`,
-      },
+    const est = await prisma.estate.findFirstOrThrow({
+      where: { companyId: testCompanyId },
     });
     testEstateId = est.id;
   });
 
   afterAll(async () => {
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe("SET LOCAL app.allow_purge = 'on'");
+      const projects = await tx.project.findMany({
+        where: { name: { contains: timestamp.toString() } },
+        select: { id: true },
+      });
+      const pIds = projects.map((p) => p.id);
+      if (pIds.length > 0) {
+        await tx.projectStatusHistory.deleteMany({ where: { projectId: { in: pIds } } });
+        await tx.projectEstate.deleteMany({ where: { projectId: { in: pIds } } });
+        await tx.project.deleteMany({ where: { id: { in: pIds } } });
+      }
+    });
+
     await prisma.user.update({
       where: { id: testUserId },
       data: { isActive: false },
