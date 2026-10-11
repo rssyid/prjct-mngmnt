@@ -53,15 +53,34 @@ Semua item belum dikerjakan. Centang hanya dengan bukti (lihat skill `/verify-ph
 
 ## F2 — Proyek dan AFCE (AC-10–25)
 
-- [ ] Transition service + riwayat status (AC-15) dan semua gate di dokumen domain §5.
-- [ ] Buat/ubah proyek: multi-Estate, kategori, data dasar, kode atomik (AC-10–13).
-- [ ] Survei + foto/dokumen/spasial, kunci setelah AFCE diajukan (AC-14).
-- [ ] Matriks approval: editor tier (SA), validasi rentang, endpoint match.
-- [ ] AFCE: attempt, BOQ, nilai = total, salin level dari tier, ubah level saat DRAFT, ajukan (tanggal pengajuan + email) (AC-16–20).
-- [ ] Catat keputusan SAP per level, aturan urutan/tanggal, durasi, efek ditolak/approved, anggaran INITIAL (AC-21–24).
-- [ ] AR tambahan (AC-25); halaman anggaran.
-- [ ] UI: daftar proyek, form proyek, workspace (header, panel langkah berikutnya, tab Ringkasan/Survei/AFCE).
+- [x] Transition service + riwayat status (AC-15) dan semua gate di dokumen domain §5.
+- [x] Buat/ubah proyek: multi-Estate, kategori, data dasar, kode atomik (AC-10–13).
+- [x] Survei + foto/dokumen/spasial, kunci setelah AFCE diajukan (AC-14).
+- [x] Matriks approval: editor tier (SA), validasi rentang, endpoint match.
+- [x] AFCE: attempt, BOQ, nilai = total, salin level dari tier, ubah level saat DRAFT, ajukan (tanggal pengajuan + email) (AC-16–20).
+- [x] Catat keputusan SAP per level, aturan urutan/tanggal, durasi, efek ditolak/approved, anggaran INITIAL (AC-21–24).
+- [x] AR tambahan (AC-25); halaman anggaran.
+- [x] UI: daftar proyek, form proyek, workspace (header, panel langkah berikutnya, tab Ringkasan/Survei/AFCE/Anggaran/Riwayat).
 - Bukti:
+  - Verifikasi: `pnpm lint` (0 error), `pnpm typecheck` (0 error), `pnpm test` (22 files, 67 tests lulus), `pnpm build` (20 routes compiled Turbopack), `pnpm test:e2e` (28/28 tests lulus desktop + mobile 375px).
+  - Bukti Acceptance Criteria:
+    - AC-10: Lulus (`tests/integration/project-code.test.ts` & `tests/e2e/survey-afce.spec.ts` — kode atomik `FOR UPDATE`, multi-estate dalam 1 company, tepat 1 estate utama).
+    - AC-11: Lulus (`tests/e2e/survey-afce.spec.ts` — tabel proyek dengan filter region, status, dan pencarian).
+    - AC-12: Lulus (`tests/integration/project-transition.test.ts` — Hold/Resume simpan previousStatus & onHoldReason, Batal dari non-terminal status).
+    - AC-13: Lulus (`tests/integration/project-code.test.ts` — optimistic locking version increment, tolak 409 VERSION_CONFLICT).
+    - AC-14: Lulus (`tests/integration/survey.test.ts` — survei lapangan CRUD, WebGIS URL, kunci saat masuk RAB_READY).
+    - AC-15: Lulus (`tests/unit/project-transition.test.ts` & `tests/integration/project-transition.test.ts` — transisi sentral lewat transition-service, trigger `projectstatushistory_immutable` tolak UPDATE/DELETE).
+    - AC-16: Lulus (`tests/integration/afce.test.ts` — attempt counter berurutan, hanya dibuat saat RAB_READY, riwayat attempt immutable).
+    - AC-17: Lulus (`tests/integration/afce.test.ts` & `tests/unit/afce-boq.test.ts` — BOQ kalkulasi total = nilai AFCE, penguncian edit saat bukan DRAFT).
+    - AC-18: Lulus (`tests/integration/approval-tier.test.ts`, `tests/unit/approval-tier.test.ts`, `tests/e2e/survey-afce.spec.ts` — tier matriks [min, max), deteksi overlap, snapshot level & flag deviasi).
+    - AC-19: Lulus (`tests/integration/afce.test.ts` — penyesuaian susunan level approver hanya diizinkan saat AFCE status DRAFT).
+    - AC-20: Lulus (`tests/integration/afce.test.ts` — tanggal pengajuan & email approval wajib diisi, tidak boleh di masa depan, status transisi ke SUBMITTED).
+    - AC-21: Lulus (`tests/integration/approval-decision.test.ts` — pencatatan keputusan SAP per level, penegakan urutan sekuensial level N butuh N-1 disetujui).
+    - AC-22: Lulus (`tests/unit/approval-duration.test.ts` & `tests/integration/approval-decision.test.ts` — perhitungan durasi hari kerja antar tanggal pengajuan & keputusan).
+    - AC-23: Lulus (`tests/integration/approval-decision.test.ts` — penolakan di sembarang level mengembalikan proyek ke status RAB_READY).
+    - AC-24: Lulus (`tests/integration/approval-decision.test.ts` — persetujuan level final mentransisikan proyek ke AFCE_AR_APPROVED & mencatat BudgetEntry INITIAL).
+    - AC-25: Lulus (`tests/integration/ar-supplement.test.ts` — pengajuan AR suplemen, sekuensial approval, dan approval final mencatat BudgetEntry AR_SUPPLEMENT).
+    - D-21 & D-22: Lulus (`MasterSelect` dinamis dari `/api/master/*`, komponen terstruktur modular di `src/components/{common,projects,survey,afce,approval,budget}`, dan layar admin `/admin/approval-matrix`).
 
 ## F3 — Pengadaan (AC-30–44)
 
