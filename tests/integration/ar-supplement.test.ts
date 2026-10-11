@@ -12,6 +12,7 @@ import {
 import { getProjectBudgetSummary } from '@/domain/budget/budget-service';
 import { recordApprovalDecision } from '@/domain/approval/approval-decision-service';
 import { DomainError } from '@/shared/errors';
+import { ensureStandardTestTiers } from '../helpers/test-tiers';
 
 describe('AR Supplement & Budget Expansion Integration Test (AC-25)', () => {
   const timestamp = Date.now();
@@ -55,35 +56,8 @@ describe('AR Supplement & Budget Expansion Integration Test (AC-25)', () => {
     pos1Id = positions[0]!.id;
     pos2Id = positions[1]!.id;
 
-    // 4. Pastikan ada tier AR aktif untuk range 0 - 500 Jt
-    const existingTier = await prisma.approvalMatrixTier.findFirst({
-      where: {
-        isActive: true,
-        forArSupplement: true,
-        minAmount: { lte: 80000000 },
-        OR: [{ maxAmount: null }, { maxAmount: { gt: 175000000 } }],
-      },
-    });
-
-    if (!existingTier) {
-      const newTier = await prisma.approvalMatrixTier.create({
-        data: {
-          name: `Tier AR Uji 0-500 Jt ${timestamp}`,
-          forAfce: false,
-          forArSupplement: true,
-          minAmount: 0,
-          maxAmount: 500000000,
-          isActive: true,
-          levels: {
-            create: [
-              { levelNo: 1, positionId: pos1Id },
-              { levelNo: 2, positionId: pos2Id },
-            ],
-          },
-        },
-      });
-      createdTierId = newTier.id;
-    }
+    // 4. Pastikan standard approval tiers tersedia
+    await ensureStandardTestTiers();
   }, 30000);
 
   afterAll(async () => {

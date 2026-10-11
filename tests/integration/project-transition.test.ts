@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { prisma, Prisma } from '@/infra/db';
+import { createProject } from '@/domain/project/project-service';
 import { transitionProjectStatus } from '@/domain/project-transition/transition-service';
 import { DomainError } from '@/shared/errors';
 
@@ -37,26 +38,19 @@ describe('Project Transition Integration & Immutability (AC-15, AC-12)', () => {
     testEstateId = est.id;
 
     // 5. Create Draft Project
-    const proj = await prisma.project.create({
-      data: {
-        code: `WM-${testCompanyCode}-2026-0001`,
+    const proj = await createProject(
+      {
         name: `Proyek Uji Transisi ${timestamp}`,
         companyId: testCompanyId,
         categoryId: testCategoryId,
         picUserId: testUserId,
-        targetStartDate: new Date('2026-11-01'),
-        targetEndDate: new Date('2026-12-01'),
-        plannedBudget: new Prisma.Decimal(1500000000),
-        status: 'DRAFT',
-        createdById: testUserId,
-        estates: {
-          create: {
-            estateId: testEstateId,
-            isPrimary: true,
-          },
-        },
+        targetStartDate: '2026-11-01',
+        targetEndDate: '2026-12-01',
+        plannedBudget: 1500000000,
+        estates: [{ estateId: testEstateId, isPrimary: true }],
       },
-    });
+      testUserId
+    );
     testProjectId = proj.id;
   });
 
@@ -95,10 +89,13 @@ describe('Project Transition Integration & Immutability (AC-15, AC-12)', () => {
     });
     expect(savedProject?.status).toBe('SURVEY');
 
-    const historyCount = await prisma.projectStatusHistory.count({
+    const historyEntries = await prisma.projectStatusHistory.findMany({
       where: { projectId: testProjectId },
+      orderBy: { at: 'asc' },
     });
-    expect(historyCount).toBe(1);
+    expect(historyEntries.length).toBe(2);
+    expect(historyEntries[1]?.fromStatus).toBe('DRAFT');
+    expect(historyEntries[1]?.toStatus).toBe('SURVEY');
 
     const audit = await prisma.auditLog.findFirst({
       where: {

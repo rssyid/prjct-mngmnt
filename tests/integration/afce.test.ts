@@ -12,6 +12,7 @@ import {
   listProjectAfceAttempts,
 } from '@/domain/afce/afce-service';
 import { DomainError } from '@/shared/errors';
+import { ensureStandardTestTiers } from '../helpers/test-tiers';
 
 describe('AFCE, BOQ, Approval Snapshot & Submission Flow (AC-16 - AC-20)', () => {
   const timestamp = Date.now();
@@ -56,34 +57,8 @@ describe('AFCE, BOQ, Approval Snapshot & Submission Flow (AC-16 - AC-20)', () =>
     pos2Id = existingPositions[1]!.id;
     pos3Id = existingPositions[2]!.id;
 
-    // 6. Tier: cari tier yang cocok atau buat baru jika belum ada
-    const existingTier = await prisma.approvalMatrixTier.findFirst({
-      where: {
-        isActive: true,
-        forAfce: true,
-        minAmount: { lte: 1200000000 },
-        OR: [{ maxAmount: null }, { maxAmount: { gt: 1200000000 } }],
-      },
-    });
-
-    if (!existingTier) {
-      await createApprovalTier(
-        {
-          name: `Tier AFCE Uji ${timestamp}`,
-          forAfce: true,
-          forArSupplement: true,
-          minAmount: 500000000,
-          maxAmount: 2000000000,
-          isActive: true,
-          levels: [
-            { levelNo: 1, positionId: pos1Id },
-            { levelNo: 2, positionId: pos2Id },
-            { levelNo: 3, positionId: pos3Id },
-          ],
-        },
-        testUserId
-      );
-    }
+    // 6. Tier: pastikan standard tiers tersedia
+    await ensureStandardTestTiers();
 
     // 7. Create Project in DRAFT
     const proj = await createProject(
@@ -136,12 +111,6 @@ describe('AFCE, BOQ, Approval Snapshot & Submission Flow (AC-16 - AC-20)', () =>
           where: { id: testProjectId },
         });
       }
-      await tx.approvalMatrixTierLevel.deleteMany({
-        where: { tier: { name: { startsWith: 'Tier AFCE Uji' } } },
-      });
-      await tx.approvalMatrixTier.deleteMany({
-        where: { name: { startsWith: 'Tier AFCE Uji' } },
-      });
     });
 
     await prisma.user.update({

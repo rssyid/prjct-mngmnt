@@ -11,6 +11,7 @@ import {
 } from '@/domain/afce/afce-service';
 import { recordApprovalDecision } from '@/domain/approval/approval-decision-service';
 import { DomainError } from '@/shared/errors';
+import { ensureStandardTestTiers } from '../helpers/test-tiers';
 
 describe('SAP Approval Decisions, Rejection, and Final Approval Workflow (AC-21 - AC-24)', () => {
   const timestamp = Date.now();
@@ -53,33 +54,8 @@ describe('SAP Approval Decisions, Rejection, and Final Approval Workflow (AC-21 
     pos1Id = positions[0]!.id;
     pos2Id = positions[1]!.id;
 
-    // 6. Tier: pastikan tier matching untuk range 1,2 Miliar ada
-    const existingTier = await prisma.approvalMatrixTier.findFirst({
-      where: {
-        isActive: true,
-        forAfce: true,
-        minAmount: { lte: 1200000000 },
-        OR: [{ maxAmount: null }, { maxAmount: { gt: 1200000000 } }],
-      },
-    });
-
-    if (!existingTier) {
-      await createApprovalTier(
-        {
-          name: `Tier Dec ${timestamp}`,
-          forAfce: true,
-          forArSupplement: true,
-          minAmount: 500000000,
-          maxAmount: 2000000000,
-          isActive: true,
-          levels: [
-            { levelNo: 1, positionId: pos1Id },
-            { levelNo: 2, positionId: pos2Id },
-          ],
-        },
-        testUserId
-      );
-    }
+    // 6. Tier: pastikan standard tiers tersedia
+    await ensureStandardTestTiers();
   }, 30000);
 
   afterAll(async () => {
@@ -111,12 +87,6 @@ describe('SAP Approval Decisions, Rejection, and Final Approval Workflow (AC-21 
           where: { id: projId },
         });
       }
-      await tx.approvalMatrixTierLevel.deleteMany({
-        where: { tier: { name: { startsWith: 'Tier Dec ' } } },
-      });
-      await tx.approvalMatrixTier.deleteMany({
-        where: { name: { startsWith: 'Tier Dec ' } },
-      });
     });
 
     await prisma.user.update({

@@ -7,6 +7,7 @@ import {
   matchApprovalTier,
 } from '@/domain/approval/approval-matrix-service';
 import { DomainError } from '@/shared/errors';
+import { ensureStandardTestTiers } from '../helpers/test-tiers';
 
 describe('Approval Matrix Tier Management & Matching (AC-18)', () => {
   const timestamp = Date.now();
@@ -50,57 +51,26 @@ describe('Approval Matrix Tier Management & Matching (AC-18)', () => {
       pos3Id = p3.id;
     }
 
-    // Bersihkan test tiers sebelumnya jika ada secara aman
-    const staleTiers = await prisma.approvalMatrixTier.findMany({
-      where: { name: { contains: 'Uji' } },
-      select: { id: true },
-    });
-    const staleIds = staleTiers.map((t) => t.id);
-    if (staleIds.length > 0) {
-      await prisma.arSupplement.updateMany({
-        where: { matrixTierId: { in: staleIds } },
-        data: { matrixTierId: null },
-      });
-      await prisma.afceAttempt.updateMany({
-        where: { matrixTierId: { in: staleIds } },
-        data: { matrixTierId: null },
-      });
-      await prisma.approvalMatrixTierLevel.deleteMany({
-        where: { tierId: { in: staleIds } },
-      });
-      await prisma.approvalMatrixTier.deleteMany({
-        where: { id: { in: staleIds } },
-      });
-    }
+    // Bersihkan semua tiers agar fresh untuk pengujian pembuatan tier
+    await prisma.arSupplement.updateMany({ data: { matrixTierId: null } });
+    await prisma.afceAttempt.updateMany({ data: { matrixTierId: null } });
+    await prisma.approvalMatrixTierLevel.deleteMany();
+    await prisma.approvalMatrixTier.deleteMany();
   });
 
   afterAll(async () => {
-    const staleTiers = await prisma.approvalMatrixTier.findMany({
-      where: { name: { contains: timestamp.toString() } },
-      select: { id: true },
-    });
-    const staleIds = staleTiers.map((t) => t.id);
-    if (staleIds.length > 0) {
-      await prisma.arSupplement.updateMany({
-        where: { matrixTierId: { in: staleIds } },
-        data: { matrixTierId: null },
-      });
-      await prisma.afceAttempt.updateMany({
-        where: { matrixTierId: { in: staleIds } },
-        data: { matrixTierId: null },
-      });
-      await prisma.approvalMatrixTierLevel.deleteMany({
-        where: { tierId: { in: staleIds } },
-      });
-      await prisma.approvalMatrixTier.deleteMany({
-        where: { id: { in: staleIds } },
-      });
-    }
+    await prisma.arSupplement.updateMany({ data: { matrixTierId: null } });
+    await prisma.afceAttempt.updateMany({ data: { matrixTierId: null } });
+    await prisma.approvalMatrixTierLevel.deleteMany();
+    await prisma.approvalMatrixTier.deleteMany();
 
     await prisma.user.update({
       where: { id: testUserId },
       data: { isActive: false },
     }).catch(() => {});
+
+    // Ensure standard tiers are available for all other test files
+    await ensureStandardTestTiers();
   });
 
   it('AC-18 berhasil membuat tier matriks approval dan menolak rentang yang tumpang tindih', async () => {

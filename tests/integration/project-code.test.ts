@@ -21,36 +21,24 @@ describe('Atomic Project Code Generation Concurrency (AC-10)', () => {
       },
     });
 
-    // 2. Gunakan Company dan Estate khusus agar counter 100% terisolasi
-    const comp = await prisma.company.create({
-      data: {
-        code: `PC_${timestamp.toString().slice(-4)}`,
-        name: `PT Project Code ${timestamp}`,
-      },
-    });
+    // 2. Gunakan Company dan Estate dari seed
+    const comp = await prisma.company.findUniqueOrThrow({ where: { code: 'WKN' } });
     testCompanyId = comp.id;
     testCompanyCode = comp.code;
 
     const cat = await prisma.projectCategory.findFirstOrThrow();
     testCategoryId = cat.id;
 
-    const wil = await prisma.wilayah.findFirstOrThrow();
-    const est = await prisma.estate.create({
-      data: {
-        companyId: testCompanyId,
-        wilayahId: wil.id,
-        code: `EC_${timestamp.toString().slice(-4)}`,
-        name: `Estate Code ${timestamp}`,
-      },
+    const est = await prisma.estate.findFirstOrThrow({
+      where: { companyId: testCompanyId },
     });
     testEstateId = est.id;
-  });
 
-  afterAll(async () => {
+    // Bersihkan counter dan proyek lama untuk company ini jika ada
     await prisma.$transaction(async (tx) => {
       await tx.$executeRawUnsafe("SET LOCAL app.allow_purge = 'on'");
       const projects = await tx.project.findMany({
-        where: { name: { contains: timestamp.toString() } },
+        where: { companyId: testCompanyId },
         select: { id: true },
       });
       const pIds = projects.map((p) => p.id);
@@ -60,8 +48,23 @@ describe('Atomic Project Code Generation Concurrency (AC-10)', () => {
         await tx.project.deleteMany({ where: { id: { in: pIds } } });
       }
       await tx.projectCodeCounter.deleteMany({ where: { companyId: testCompanyId } });
-      if (testEstateId) await tx.estate.deleteMany({ where: { id: testEstateId } });
-      if (testCompanyId) await tx.company.deleteMany({ where: { id: testCompanyId } });
+    });
+  });
+
+  afterAll(async () => {
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe("SET LOCAL app.allow_purge = 'on'");
+      const projects = await tx.project.findMany({
+        where: { companyId: testCompanyId },
+        select: { id: true },
+      });
+      const pIds = projects.map((p) => p.id);
+      if (pIds.length > 0) {
+        await tx.projectStatusHistory.deleteMany({ where: { projectId: { in: pIds } } });
+        await tx.projectEstate.deleteMany({ where: { projectId: { in: pIds } } });
+        await tx.project.deleteMany({ where: { id: { in: pIds } } });
+      }
+      await tx.projectCodeCounter.deleteMany({ where: { companyId: testCompanyId } });
     });
 
     await prisma.user.update({
