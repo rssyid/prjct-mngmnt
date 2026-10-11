@@ -3,63 +3,81 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 async function cleanup() {
-  const masterJson = JSON.parse(readFileSync(join(process.cwd(), 'prisma/seed-data/master.json'), 'utf-8'));
+  const lokasiJson = JSON.parse(readFileSync(join(process.cwd(), 'prisma/seed-data/lokasi.json'), 'utf-8'));
 
-  const seedRegCodes = masterJson.regions.map((r: { code: string }) => r.code);
-  const seedWilNames = masterJson.wilayah.map((w: { name: string }) => w.name);
-  const seedCompCodes = masterJson.companies.map((c: { code: string }) => c.code);
-  const seedEstCodes = masterJson.estates.map((e: { code: string }) => e.code);
+  const seedRegCodes = lokasiJson.regions.map((r: { code: string }) => r.code);
+  const seedWilNames = lokasiJson.wilayah.map((w: { name: string }) => w.name);
+  const seedCompCodes = lokasiJson.companies.map((c: { code: string }) => c.code);
+  const seedEstCodes = lokasiJson.estates.map((e: { code: string }) => e.code);
 
   console.log('--- Checking Stray Test Data ---');
 
-  // 1. Delete test projects and relations first
   const strayEstates = await prisma.estate.findMany({
     where: { NOT: { code: { in: seedEstCodes } } },
     select: { id: true, code: true },
   });
   console.log(`Found ${strayEstates.length} stray estates`);
 
-  if (strayEstates.length > 0) {
-    const estateIds = strayEstates.map((e) => e.id);
-    await prisma.projectEstate.deleteMany({
-      where: { estateId: { in: estateIds } },
-    });
-    await prisma.block.deleteMany({
-      where: { estateId: { in: estateIds } },
-    });
-    await prisma.estate.deleteMany({
-      where: { id: { in: estateIds } },
-    });
-  }
-
-  // 2. Delete test companies
   const strayComps = await prisma.company.findMany({
     where: { NOT: { code: { in: seedCompCodes } } },
     select: { id: true, code: true },
   });
   console.log(`Found ${strayComps.length} stray companies`);
-  if (strayComps.length > 0) {
-    const compIds = strayComps.map((c) => c.id);
-    const projects = await prisma.project.findMany({
-      where: { companyId: { in: compIds } },
-      select: { id: true },
-    });
-    const projectIds = projects.map((p) => p.id);
+
+  const compIds = strayComps.map((c) => c.id);
+  const estateIds = strayEstates.map((e) => e.id);
+
+  const projects = await prisma.project.findMany({
+    where: {
+      OR: [
+        { companyId: { in: compIds } },
+        { estates: { some: { estateId: { in: estateIds } } } },
+      ],
+    },
+    select: { id: true },
+  });
+  const projectIds = projects.map((p) => p.id);
+  console.log(`Found ${projectIds.length} stray projects`);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe("SET LOCAL app.allow_purge = 'on'");
+
     if (projectIds.length > 0) {
-      await prisma.projectEstate.deleteMany({
+      await tx.survey.deleteMany({
         where: { projectId: { in: projectIds } },
       });
-      await prisma.project.deleteMany({
+      await tx.projectStatusHistory.deleteMany({
+        where: { projectId: { in: projectIds } },
+      });
+      await tx.projectEstate.deleteMany({
+        where: { projectId: { in: projectIds } },
+      });
+      await tx.project.deleteMany({
         where: { id: { in: projectIds } },
       });
     }
-    await prisma.projectCodeCounter.deleteMany({
-      where: { companyId: { in: compIds } },
-    });
-    await prisma.company.deleteMany({
-      where: { id: { in: compIds } },
-    });
-  }
+
+    if (estateIds.length > 0) {
+      await tx.projectEstate.deleteMany({
+        where: { estateId: { in: estateIds } },
+      });
+      await tx.block.deleteMany({
+        where: { estateId: { in: estateIds } },
+      });
+      await tx.estate.deleteMany({
+        where: { id: { in: estateIds } },
+      });
+    }
+
+    if (compIds.length > 0) {
+      await tx.projectCodeCounter.deleteMany({
+        where: { companyId: { in: compIds } },
+      });
+      await tx.company.deleteMany({
+        where: { id: { in: compIds } },
+      });
+    }
+  });
 
   // 3. Delete stray wilayah
   const strayWil = await prisma.wilayah.findMany({
@@ -88,6 +106,17 @@ async function cleanup() {
   // 5. Delete test categories (CAT_*)
   await prisma.projectCategory.deleteMany({
     where: { code: { startsWith: 'CAT_' } },
+  });
+
+  // 6. Delete test users
+  await prisma.user.deleteMany({
+    where: {
+      OR: [
+        { email: { startsWith: 'code_' } },
+        { email: { startsWith: 'trans_' } },
+        { email: { startsWith: 'crud_' } },
+      ],
+    },
   });
 
   const [regions, wilayah, companies, estates] = await Promise.all([
