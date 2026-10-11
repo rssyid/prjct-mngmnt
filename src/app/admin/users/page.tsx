@@ -416,6 +416,15 @@ function AdminUsersContent() {
           </DialogHeader>
           <form onSubmit={handleUpdateUser} className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="edit-email">Alamat Email (Akun)</Label>
+              <Input
+                id="edit-email"
+                value={selectedUser?.email || ''}
+                disabled
+                className="bg-slate-100 text-slate-500 cursor-not-allowed"
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="edit-name">Nama Lengkap</Label>
               <Input
                 id="edit-name"

@@ -7,15 +7,39 @@ import { AppShell } from '@/components/prototype/app-shell';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { formatPercent, formatDate } from '@/shared/lib/format';
 import { MOCK_PROJECTS } from '@/components/prototype/mock-data';
 import { Plus, Search, Filter, Eye, ChevronRight, Lock } from 'lucide-react';
+import { toast } from 'sonner';
 
 function ProjectsContent() {
   const { canMutate, roleLabel } = useRole();
   const [search, setSearch] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('ALL');
   const [selectedStatus, setSelectedStatus] = useState('ALL');
+
+  // Dialog Buat Proyek Baru
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [projectName, setProjectName] = useState('');
+  const [projectCategory, setProjectCategory] = useState('Rehabilitasi Saluran');
+  const [company, setCompany] = useState('PT Kresna Sakti Agro');
+  const [primaryEstate, setPrimaryEstate] = useState('Kresna Agro Estate');
+  const [pic, setPic] = useState('Ahmad Fauzi (HO Specialist)');
+  const [plannedBudget, setPlannedBudget] = useState('1250000000');
+  const [targetStartDate, setTargetStartDate] = useState('2026-11-01');
+  const [targetEndDate, setTargetEndDate] = useState('2027-02-28');
+  const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filteredProjects = MOCK_PROJECTS.filter((proj) => {
     const matchSearch =
@@ -48,7 +72,7 @@ function ProjectsContent() {
             <Button
               variant="default"
               className="gap-2 text-xs sm:text-sm bg-[#0f2c59]"
-              onClick={() => alert('Simulasi: Dialog form pembuatan proyek baru dibuka (Aktif untuk Super Admin & Specialist).')}
+              onClick={() => setIsCreateOpen(true)}
             >
               <Plus className="h-4 w-4" /> Buat Proyek Baru
             </Button>
@@ -227,6 +251,178 @@ function ProjectsContent() {
           </Link>
         ))}
       </div>
+
+      {/* Modal Dialog Buat Proyek Baru */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Buat Proyek Water Management Baru</DialogTitle>
+            <DialogDescription>
+              Isi parameter dasar proyek. Kode proyek akan digenerate otomatis berdasarkan Company dan tahun berjalan (WM-[Company]-[YYYY]-[SEQ4]).
+            </DialogDescription>
+          </DialogHeader>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setIsSubmitting(true);
+              setTimeout(() => {
+                setIsSubmitting(false);
+                setIsCreateOpen(false);
+                toast.success(`Proyek "${projectName}" berhasil didaftarkan dengan kode WM-KSA-2026-0004!`);
+              }, 400);
+            }}
+            className="space-y-4 pt-2"
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="proj-name">Nama Proyek *</Label>
+              <Input
+                id="proj-name"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                placeholder="mis. Rehabilitasi Saluran Drainase & Tanggul Blok A-B"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="proj-category">Kategori Proyek *</Label>
+                <select
+                  id="proj-category"
+                  value={projectCategory}
+                  onChange={(e) => setProjectCategory(e.target.value)}
+                  disabled={isSubmitting}
+                  className="w-full border border-slate-300 rounded-md p-2 text-sm bg-white"
+                >
+                  <option value="Rehabilitasi Saluran">Rehabilitasi Saluran</option>
+                  <option value="Cuci Parit">Cuci Parit</option>
+                  <option value="Sinking / Pemasangan Pipa">Sinking / Pemasangan Pipa</option>
+                  <option value="Tanggul Keliling">Tanggul Keliling</option>
+                  <option value="Pintu Air / Water Control">Pintu Air / Water Control</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="proj-company">Company (PT) *</Label>
+                <select
+                  id="proj-company"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  disabled={isSubmitting}
+                  className="w-full border border-slate-300 rounded-md p-2 text-sm bg-white"
+                >
+                  <option value="PT Kresna Sakti Agro">PT Kresna Sakti Agro (KSA)</option>
+                  <option value="PT Tapian Nadenggan">PT Tapian Nadenggan (TKA)</option>
+                  <option value="PT Buana Karya Mandiri">PT Buana Karya Mandiri (BKM)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="proj-estate">Estate Utama *</Label>
+                <select
+                  id="proj-estate"
+                  value={primaryEstate}
+                  onChange={(e) => setPrimaryEstate(e.target.value)}
+                  disabled={isSubmitting}
+                  className="w-full border border-slate-300 rounded-md p-2 text-sm bg-white"
+                >
+                  <option value="Kresna Agro Estate">Kresna Agro Estate (KSAE)</option>
+                  <option value="Sungai Kupang Estate">Sungai Kupang Estate (SKPE)</option>
+                  <option value="Tapian Estate">Tapian Estate (TKAE)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="proj-pic">PIC Proyek (HO Specialist) *</Label>
+                <Input
+                  id="proj-pic"
+                  value={pic}
+                  onChange={(e) => setPic(e.target.value)}
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="proj-budget">Rencana Anggaran Awal (RAB Estimasi / Planned Budget) *</Label>
+              <Input
+                id="proj-budget"
+                type="number"
+                value={plannedBudget}
+                onChange={(e) => setPlannedBudget(e.target.value)}
+                placeholder="mis. 1250000000"
+                required
+                disabled={isSubmitting}
+              />
+              <p className="text-[11px] text-slate-500">
+                Nilai estimasi anggaran awal sebelum pengajuan survei dan penetapan BOQ final.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="proj-start">Target Tanggal Mulai *</Label>
+                <Input
+                  id="proj-start"
+                  type="date"
+                  value={targetStartDate}
+                  onChange={(e) => setTargetStartDate(e.target.value)}
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="proj-end">Target Tanggal Selesai *</Label>
+                <Input
+                  id="proj-end"
+                  type="date"
+                  value={targetEndDate}
+                  onChange={(e) => setTargetEndDate(e.target.value)}
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="proj-notes">Catatan & Lingkup Survei</Label>
+              <textarea
+                id="proj-notes"
+                rows={2}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Deskripsi awal kebutuhan pekerjaan lapangan..."
+                disabled={isSubmitting}
+                className="w-full border border-slate-300 rounded-md p-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#0f2c59]"
+              />
+            </div>
+
+            <DialogFooter className="pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCreateOpen(false)}
+                disabled={isSubmitting}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                className="bg-[#0f2c59] hover:bg-[#163a70] text-white"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Memproses...' : 'Simpan & Buat Proyek'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

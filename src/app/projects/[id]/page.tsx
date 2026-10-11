@@ -8,6 +8,16 @@ import { AppShell } from '@/components/prototype/app-shell';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { formatPercent, formatCurrency, formatDate } from '@/shared/lib/format';
 import { MOCK_PROJECTS, MOCK_GANTT_ROWS, MOCK_GANTT_WEEKS } from '@/components/prototype/mock-data';
@@ -27,6 +37,7 @@ import {
   Layers,
   History,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 function ProjectWorkspaceContent() {
   const params = useParams();
@@ -35,6 +46,30 @@ function ProjectWorkspaceContent() {
 
   const project = MOCK_PROJECTS.find((p) => p.id === projectId) || MOCK_PROJECTS[0]!;
   const [activeTab, setActiveTab] = useState('ringkasan');
+
+  // Modal Dialog States
+  const [isLogOpen, setIsLogOpen] = useState(false);
+  const [isDeliveryOpen, setIsDeliveryOpen] = useState(false);
+  const [isBastOpen, setIsBastOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form States Log Progres
+  const [logWeek, setLogWeek] = useState('Minggu ke-8 (12 - 17 Okt 2026)');
+  const [logDate, setLogDate] = useState('2026-10-17');
+  const [logProgress, setLogProgress] = useState(String(project.progress));
+  const [logHours, setLogHours] = useState('42');
+  const [logWeather, setLogWeather] = useState('Cuaca cerah berawan, pekerjaan lancar tanpa genangan.');
+
+  // Form States Kiriman Material
+  const [deliveryPkg, setDeliveryPkg] = useState('Paket 1: Pipa HDPE 12 Inch');
+  const [deliveryDate, setDeliveryDate] = useState('2026-10-15');
+  const [deliveryDoNumber, setDeliveryDoNumber] = useState('DO/2026/X/084');
+  const [deliveryQty, setDeliveryQty] = useState('150');
+
+  // Form States BAST
+  const [bastNumber, setBastNumber] = useState('BAST/WM/2026/001');
+  const [bastDate, setBastDate] = useState('2026-10-18');
+  const [bastNotes, setBastNotes] = useState('Seluruh pekerjaan saluran dan tanggul telah selesai dan terinspeksi 100%.');
 
   return (
     <div className="space-y-6">
@@ -130,27 +165,26 @@ function ProjectWorkspaceContent() {
                 <Button
                   size="sm"
                   variant="default"
-                  className="bg-[#0f2c59] text-xs h-8"
-                  onClick={() => alert('Simulasi: Dialog pencatatan Log Progres Mingguan dibuka.')}
+                  className="bg-[#0f2c59] hover:bg-[#163a70] text-xs h-8 text-white"
+                  onClick={() => setIsLogOpen(true)}
                 >
                   <Clock className="h-3.5 w-3.5 mr-1" /> Isi Log Progres
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-xs h-8 border-slate-300"
-                  onClick={() => alert('Simulasi: Dialog pencatatan Kiriman Material dibuka.')}
+                  className="text-xs h-8 border-slate-300 bg-white hover:bg-slate-50"
+                  onClick={() => setIsDeliveryOpen(true)}
                 >
                   <Truck className="h-3.5 w-3.5 mr-1" /> Catat Kiriman
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={project.progress < 100}
-                  className="text-xs h-8 border-slate-300 disabled:opacity-50"
-                  onClick={() => alert('Simulasi: Pengajuan BAST diproses.')}
+                  className="text-xs h-8 border-slate-300 bg-white hover:bg-slate-50"
+                  onClick={() => setIsBastOpen(true)}
                 >
-                  Ajukan BAST {project.progress < 100 && '(Fisik < 100%)'}
+                  Ajukan BAST
                 </Button>
               </>
             ) : (
@@ -460,6 +494,180 @@ function ProjectWorkspaceContent() {
           </Card>
         </TabsContent>
       </Tabs>
+      {/* Dialog 1: Log Progres Mingguan */}
+      <Dialog open={isLogOpen} onOpenChange={setIsLogOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Pencatatan Log Progres Mingguan</DialogTitle>
+            <DialogDescription>
+              Laporkan realisasi progres fisik lapangan dan catatan operasional alat berat.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setIsSubmitting(true);
+              setTimeout(() => {
+                setIsSubmitting(false);
+                setIsLogOpen(false);
+                toast.success('Log progres mingguan berhasil dicatat dan deviasi diperbarui!');
+              }, 400);
+            }}
+            className="space-y-4 pt-2"
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="log-week">Periode Minggu Pelaksanaan</Label>
+              <Input id="log-week" value={logWeek} onChange={(e) => setLogWeek(e.target.value)} required disabled={isSubmitting} />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="log-date">Tanggal Laporan *</Label>
+                <Input id="log-date" type="date" value={logDate} onChange={(e) => setLogDate(e.target.value)} required disabled={isSubmitting} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="log-prog">Realisasi Progres Kumulatif (%) *</Label>
+                <Input id="log-prog" type="number" step="0.1" value={logProgress} onChange={(e) => setLogProgress(e.target.value)} required disabled={isSubmitting} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="log-hours">Jam Kerja Alat Berat (Hour Meter) *</Label>
+              <Input id="log-hours" type="number" value={logHours} onChange={(e) => setLogHours(e.target.value)} placeholder="mis. 42" required disabled={isSubmitting} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="log-weather">Catatan Cuaca & Kendala Lapangan</Label>
+              <textarea
+                id="log-weather"
+                rows={2}
+                value={logWeather}
+                onChange={(e) => setLogWeather(e.target.value)}
+                disabled={isSubmitting}
+                className="w-full border border-slate-300 rounded-md p-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#0f2c59]"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="log-photo">Dokumentasi Foto Lapangan (Opsional)</Label>
+              <Input id="log-photo" type="file" accept="image/*" disabled={isSubmitting} className="text-xs bg-slate-50" />
+              <p className="text-[11px] text-slate-500">Maks. 5 MB per foto (dikompresi di peramban sebelum upload).</p>
+            </div>
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" onClick={() => setIsLogOpen(false)} disabled={isSubmitting}>Batal</Button>
+              <Button type="submit" className="bg-[#0f2c59] hover:bg-[#163a70] text-white" disabled={isSubmitting}>
+                {isSubmitting ? 'Menyimpan...' : 'Simpan Log Progres'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog 2: Kiriman Material */}
+      <Dialog open={isDeliveryOpen} onOpenChange={setIsDeliveryOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Pencatatan Kiriman Material</DialogTitle>
+            <DialogDescription>
+              Catat penerimaan material yang tiba di lokasi kebun berdasarkan surat jalan / DO vendor.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setIsSubmitting(true);
+              setTimeout(() => {
+                setIsSubmitting(false);
+                setIsDeliveryOpen(false);
+                toast.success('Penerimaan kiriman material berhasil dicatat!');
+              }, 400);
+            }}
+            className="space-y-4 pt-2"
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="del-pkg">Paket Kerja Terkait *</Label>
+              <select
+                id="del-pkg"
+                value={deliveryPkg}
+                onChange={(e) => setDeliveryPkg(e.target.value)}
+                disabled={isSubmitting}
+                className="w-full border border-slate-300 rounded-md p-2 text-sm bg-white"
+              >
+                <option value="Paket 1: Pipa HDPE 12 Inch">Paket 1: Pipa HDPE 12 Inch (Vendor PT Sumber Makmur)</option>
+                <option value="Paket 2: Geotekstil Non-Woven">Paket 2: Geotekstil Non-Woven (Vendor PT Duta Tirta)</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="del-date">Tanggal Penerimaan *</Label>
+                <Input id="del-date" type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} required disabled={isSubmitting} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="del-do">Nomor Surat Jalan (DO) *</Label>
+                <Input id="del-do" value={deliveryDoNumber} onChange={(e) => setDeliveryDoNumber(e.target.value)} placeholder="DO/2026/..." required disabled={isSubmitting} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="del-qty">Volume Diterima *</Label>
+              <Input id="del-qty" type="number" value={deliveryQty} onChange={(e) => setDeliveryQty(e.target.value)} required disabled={isSubmitting} />
+            </div>
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" onClick={() => setIsDeliveryOpen(false)} disabled={isSubmitting}>Batal</Button>
+              <Button type="submit" className="bg-[#0f2c59] hover:bg-[#163a70] text-white" disabled={isSubmitting}>
+                {isSubmitting ? 'Menyimpan...' : 'Simpan Penerimaan'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog 3: Pengajuan BAST */}
+      <Dialog open={isBastOpen} onOpenChange={setIsBastOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Pengajuan Berita Acara Serah Terima (BAST)</DialogTitle>
+            <DialogDescription>
+              Ajukan BAST untuk menyelesaikan proyek. Setelah diajukan, status proyek beralih ke WAITING_BAST dan mutasi dikunci.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setIsSubmitting(true);
+              setTimeout(() => {
+                setIsSubmitting(false);
+                setIsBastOpen(false);
+                toast.success('Pengajuan BAST berhasil dikirim! Menunggu verifikasi.');
+              }, 400);
+            }}
+            className="space-y-4 pt-2"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="bast-no">Nomor Dokumen BAST *</Label>
+                <Input id="bast-no" value={bastNumber} onChange={(e) => setBastNumber(e.target.value)} required disabled={isSubmitting} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="bast-date">Tanggal Pengajuan *</Label>
+                <Input id="bast-date" type="date" value={bastDate} onChange={(e) => setBastDate(e.target.value)} required disabled={isSubmitting} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="bast-notes">Catatan & Pernyataan Penyelesaian</Label>
+              <textarea
+                id="bast-notes"
+                rows={3}
+                value={bastNotes}
+                onChange={(e) => setBastNotes(e.target.value)}
+                disabled={isSubmitting}
+                className="w-full border border-slate-300 rounded-md p-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#0f2c59]"
+              />
+            </div>
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" onClick={() => setIsBastOpen(false)} disabled={isSubmitting}>Batal</Button>
+              <Button type="submit" className="bg-[#0f2c59] hover:bg-[#163a70] text-white" disabled={isSubmitting}>
+                {isSubmitting ? 'Mengirim...' : 'Kirim Pengajuan BAST'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
