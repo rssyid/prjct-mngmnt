@@ -292,12 +292,11 @@ export async function runSeed(client: PrismaClient = defaultPrisma) {
         password: hashedPassword,
       },
     });
-  } else {
+  } else if (existingAcc.accountId !== adminUser.id) {
     await client.account.update({
       where: { id: existingAcc.id },
       data: {
         accountId: adminUser.id,
-        password: hashedPassword,
       },
     });
   }

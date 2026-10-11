@@ -146,4 +146,16 @@ describe('User Management and Session Revocation (AC-03, AC-04)', () => {
     });
     expect(activeSessions).toBe(0);
   });
+
+  it('updateUser dapat mengubah status mustChangePassword', async () => {
+    const updated = await updateUser(saActorId, createdTargetUserId, {
+      mustChangePassword: false,
+    });
+    expect(updated.mustChangePassword).toBe(false);
+
+    const reUpdated = await updateUser(saActorId, createdTargetUserId, {
+      mustChangePassword: true,
+    });
+    expect(reUpdated.mustChangePassword).toBe(true);
+  });
 });

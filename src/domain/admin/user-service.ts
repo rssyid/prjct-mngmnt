@@ -124,11 +124,13 @@ export async function updateUser(
         name: before.name,
         role: before.role,
         isActive: before.isActive,
+        mustChangePassword: before.mustChangePassword,
       },
       after: {
         name: updated.name,
         role: updated.role,
         isActive: updated.isActive,
+        mustChangePassword: updated.mustChangePassword,
       },
     });
 

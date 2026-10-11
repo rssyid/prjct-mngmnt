@@ -24,6 +24,7 @@ export const updateUserSchema = z.object({
   name: z.string().min(2, 'Nama minimal 2 karakter').optional(),
   role: z.enum(['SUPER_ADMIN', 'WM_HO_SPECIALIST', 'MANAGEMENT_VIEWER']).optional(),
   isActive: z.boolean().optional(),
+  mustChangePassword: z.boolean().optional(),
 });
 
 export const resetPasswordSchema = z.object({

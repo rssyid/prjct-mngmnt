@@ -60,6 +60,7 @@ function AdminUsersContent() {
   const [editName, setEditName] = useState('');
   const [editRole, setEditRole] = useState<Role>('WM_HO_SPECIALIST');
   const [editIsActive, setEditIsActive] = useState(true);
+  const [editMustChangePassword, setEditMustChangePassword] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -176,6 +177,7 @@ function AdminUsersContent() {
           name: editName,
           role: editRole,
           isActive: editIsActive,
+          mustChangePassword: editMustChangePassword,
         }),
       });
       const data = await res.json();
@@ -300,6 +302,7 @@ function AdminUsersContent() {
                         setEditName(u.name);
                         setEditRole(u.role);
                         setEditIsActive(u.isActive);
+                        setEditMustChangePassword(u.mustChangePassword);
                         setIsEditOpen(true);
                       }}
                     >
@@ -446,6 +449,19 @@ function AdminUsersContent() {
                 disabled={isSubmitting}
               />
               <Label htmlFor="edit-active">Akun Aktif</Label>
+            </div>
+            <div className="flex items-center space-x-2 pt-1">
+              <input
+                type="checkbox"
+                id="edit-must-change-password"
+                checked={editMustChangePassword}
+                onChange={(e) => setEditMustChangePassword(e.target.checked)}
+                className="rounded border-slate-300 text-blue-900"
+                disabled={isSubmitting}
+              />
+              <Label htmlFor="edit-must-change-password">
+                Wajib ganti password pada login berikutnya
+              </Label>
             </div>
             <DialogFooter>
               <Button
