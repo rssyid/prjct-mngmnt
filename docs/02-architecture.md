@@ -22,8 +22,9 @@ Status: disetujui 10 Oktober 2026. Versi patch library dikunci saat scaffold (fa
 | Test | Vitest, Playwright (termasuk viewport 375 px), axe-core |
 | Tooling | pnpm, GitHub, GitHub Actions |
 | Hosting | Vercel Hobby, region fungsi Asia terdekat (Singapura jika tersedia), sama dengan region Neon |
+| Rate Limit | Upstash Redis (REST HTTP `@upstash/ratelimit`), khusus proteksi brute-force login & upload file (D-20) |
 
-Prinsip portabel: tidak memakai KV, Blob, Cron, Edge atau fitur khusus Vercel. Semua konfigurasi lewat environment variable. Aplikasi harus bisa jalan dengan `next build && next start` di Node.js biasa.
+Prinsip portabel: tidak memakai KV, Blob, Cron, Edge atau fitur khusus Vercel. Upstash Redis diakses via protokol REST HTTP murni tanpa koneksi TCP persisten. Semua konfigurasi lewat environment variable. Aplikasi harus bisa jalan dengan `next build && next start` di Node.js biasa.
 
 ## 2. Komponen
 

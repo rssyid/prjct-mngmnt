@@ -16,7 +16,7 @@ Jika dua sumber bertentangan atau ada yang tidak tercakup: berhenti, jelaskan ko
 
 ## Stack
 
-Next.js 16 (App Router, runtime Node.js, TypeScript strict) · Better Auth (email/password) · Prisma 7 + `@prisma/adapter-pg` · PostgreSQL Neon · Cloudflare R2 (presigned URL) · Zod · shadcn/ui + Tailwind v4 · React Hook Form · TanStack Query/Table/Virtual · Recharts · date-fns (Asia/Jakarta) · ExcelJS · @react-pdf/renderer · Vitest · Playwright · axe-core · pnpm · Vercel Hobby.
+Next.js 16 (App Router, runtime Node.js, TypeScript strict) · Better Auth (email/password) · Prisma 7 + `@prisma/adapter-pg` · PostgreSQL Neon · Cloudflare R2 (presigned URL) · Upstash Redis (`@upstash/ratelimit`, REST HTTP) · Zod · shadcn/ui + Tailwind v4 · React Hook Form · TanStack Query/Table/Virtual · Recharts · date-fns (Asia/Jakarta) · ExcelJS · @react-pdf/renderer · Vitest · Playwright · axe-core · pnpm · Vercel Hobby.
 
 ## Perintah
 

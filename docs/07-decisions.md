@@ -45,3 +45,5 @@ Ringkasan semua keputusan planning (10 Oktober 2026). Isinya sudah dituangkan ke
 | UI-01–05 | Filter disimpan di browser; pengingat log mingguan; pola garis sel revisi; dashboard 10 deviasi terbesar + Kurva S; prototipe dicoba sebelum UI. |
 | S-01–08 | shadcn/ui + Tailwind v4; RHF + Zod; RSC + TanStack Query; TanStack Table + Gantt sendiri; Recharts; date-fns WIB; mode terang, biru tua, Inter; Vitest/Playwright/axe, pnpm. |
 | R-01–04 | Proyek pribadi via Antigravity, fase berurutan; halaman < 3 detik; cek Neon manual mingguan; UAT oleh pemilik dengan tiga akun. |
+| D-20 | 11 Oktober 2026: Upstash Redis (REST HTTP) digunakan khusus untuk Rate Limiting endpoint sensitif (login, ganti password, upload file R2) via `@upstash/ratelimit`. Tidak digunakan untuk caching domain/EWS demi menjaga integritas data tanpa risiko stale data. Dokumen diubah: docs/02, docs/04, docs/07, .env.example, AGENTS.md. |
+

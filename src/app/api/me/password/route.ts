@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSessionUser } from '@/infra/session';
+import { assertRateLimit } from '@/infra/ratelimit';
 import { changePasswordSchema } from '@/shared/schemas/auth';
 import { toHttpError } from '@/shared/errors';
 import { hashPassword } from 'better-auth/crypto';
@@ -10,6 +11,7 @@ import type { ApiResponse } from '@/shared/types/api';
 export async function POST(request: NextRequest) {
   try {
     const user = await requireSessionUser(request);
+    await assertRateLimit(user.id, 'auth');
     const body = await request.json();
     const parsed = changePasswordSchema.parse(body);
 

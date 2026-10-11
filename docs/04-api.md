@@ -27,6 +27,7 @@ Status: disetujui 10 Oktober 2026. REST JSON di `/api`, dipakai UI sendiri dan t
 | 409 | VERSION_CONFLICT | Data diubah orang lain |
 | 409 | IN_USE | Master sudah dipakai |
 | 413 | FILE_TOO_LARGE | Melebihi batas ukuran |
+| 429 | TOO_MANY_REQUESTS | Terlalu banyak permintaan (Upstash rate limit login/upload, D-20) |
 | 500 | INTERNAL_ERROR | Error tak terduga |
 
 ## 2. Master dan matriks approval

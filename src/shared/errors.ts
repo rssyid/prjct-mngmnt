@@ -16,6 +16,7 @@ export type DomainErrorCode =
   | 'VERSION_CONFLICT'
   | 'IN_USE'
   | 'FILE_TOO_LARGE'
+  | 'TOO_MANY_REQUESTS'
   | 'INTERNAL_ERROR';
 
 export const HTTP_STATUS_MAP: Record<DomainErrorCode, number> = {
@@ -33,6 +34,7 @@ export const HTTP_STATUS_MAP: Record<DomainErrorCode, number> = {
   VERSION_CONFLICT: 409,
   IN_USE: 409,
   FILE_TOO_LARGE: 413,
+  TOO_MANY_REQUESTS: 429,
   INTERNAL_ERROR: 500,
 };
 

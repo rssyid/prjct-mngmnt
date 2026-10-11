@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSessionUser } from '@/infra/session';
 import { assertCan } from '@/shared/permissions';
+import { assertRateLimit } from '@/infra/ratelimit';
 import { requestUploadUrl } from '@/domain/files/file-service';
 import { toHttpError } from '@/shared/errors';
 import type { ApiResponse } from '@/shared/types/api';
@@ -9,6 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireSessionUser(request);
     assertCan(user, 'mutate:project'); // SA dan SP boleh
+    await assertRateLimit(user.id, 'upload');
 
     const body = await request.json();
     const result = await requestUploadUrl(user.id, body);
