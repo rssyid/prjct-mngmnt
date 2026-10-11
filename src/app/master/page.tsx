@@ -32,7 +32,9 @@ type MasterTab =
   | 'heavy-equipment-types'
   | 'approval-positions'
   | 'regions'
-  | 'companies';
+  | 'wilayah'
+  | 'companies'
+  | 'estates';
 
 interface MasterRecord {
   id: string;
@@ -43,6 +45,14 @@ interface MasterRecord {
   rank?: number;
   isComplete?: boolean;
   type?: string;
+  companyId?: string;
+  wilayahId?: string;
+  regionId?: string;
+  estateNew?: string | null;
+  legacyCode?: string | null;
+  company?: { id?: string; code?: string; name: string };
+  wilayah?: { id?: string; name: string; region?: { id?: string; code?: string; name: string } };
+  region?: { id?: string; code?: string; name: string };
   [key: string]: unknown;
 }
 
@@ -60,6 +70,14 @@ export default function MasterDataPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formName, setFormName] = useState('');
   const [formCode, setFormCode] = useState('');
+  const [formCompanyId, setFormCompanyId] = useState('');
+  const [formWilayahId, setFormWilayahId] = useState('');
+  const [formRegionId, setFormRegionId] = useState('');
+  const [formEstateNew, setFormEstateNew] = useState('');
+  const [formLegacyCode, setFormLegacyCode] = useState('');
+  const [companiesList, setCompaniesList] = useState<Array<{ id: string; code: string; name: string }>>([]);
+  const [wilayahList, setWilayahList] = useState<Array<{ id: string; name: string }>>([]);
+  const [regionsList, setRegionsList] = useState<Array<{ id: string; code: string; name: string }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Ambil profil sesi untuk mengetahui peran (AC-02)
@@ -122,11 +140,44 @@ export default function MasterDataPage() {
     };
   }, [currentTab, activeFilter, searchQuery]);
 
+  const loadDropdowns = async (tab: MasterTab) => {
+    if (tab === 'estates') {
+      if (companiesList.length === 0) {
+        try {
+          const res = await fetch('/api/master/companies');
+          const json = await res.json();
+          if (json.data) setCompaniesList(json.data);
+        } catch {}
+      }
+      if (wilayahList.length === 0) {
+        try {
+          const res = await fetch('/api/master/wilayah');
+          const json = await res.json();
+          if (json.data) setWilayahList(json.data);
+        } catch {}
+      }
+    } else if (tab === 'wilayah') {
+      if (regionsList.length === 0) {
+        try {
+          const res = await fetch('/api/master/regions');
+          const json = await res.json();
+          if (json.data) setRegionsList(json.data);
+        } catch {}
+      }
+    }
+  };
+
   const handleOpenCreate = () => {
     setDialogMode('create');
     setSelectedId(null);
     setFormName('');
     setFormCode('');
+    setFormCompanyId('');
+    setFormWilayahId('');
+    setFormRegionId('');
+    setFormEstateNew('');
+    setFormLegacyCode('');
+    loadDropdowns(currentTab);
     setIsDialogOpen(true);
   };
 
@@ -135,6 +186,12 @@ export default function MasterDataPage() {
     setSelectedId(item.id);
     setFormName(item.name || '');
     setFormCode(item.code || '');
+    setFormCompanyId(item.companyId || item.company?.id || '');
+    setFormWilayahId(item.wilayahId || item.wilayah?.id || '');
+    setFormRegionId(item.regionId || item.region?.id || item.wilayah?.region?.id || '');
+    setFormEstateNew(item.estateNew || '');
+    setFormLegacyCode(item.legacyCode || '');
+    loadDropdowns(currentTab);
     setIsDialogOpen(true);
   };
 
@@ -143,8 +200,17 @@ export default function MasterDataPage() {
     try {
       setIsSubmitting(true);
       const payload: Record<string, unknown> = { name: formName };
-      if (['units', 'project-categories', 'approval-positions', 'regions', 'companies'].includes(currentTab)) {
+      if (['units', 'project-categories', 'approval-positions', 'regions', 'companies', 'estates'].includes(currentTab)) {
         payload.code = formCode;
+      }
+      if (currentTab === 'estates') {
+        payload.companyId = formCompanyId;
+        payload.wilayahId = formWilayahId;
+        payload.estateNew = formEstateNew.trim() || null;
+        payload.legacyCode = formLegacyCode.trim() || null;
+      }
+      if (currentTab === 'wilayah') {
+        payload.regionId = formRegionId;
       }
       if (currentTab === 'approval-positions' && dialogMode === 'create') {
         payload.rank = data.length + 1;
@@ -257,7 +323,9 @@ export default function MasterDataPage() {
           <TabsTrigger value="heavy-equipment-types">Alat Berat</TabsTrigger>
           <TabsTrigger value="approval-positions">Jabatan Approver</TabsTrigger>
           <TabsTrigger value="regions">Region</TabsTrigger>
+          <TabsTrigger value="wilayah">Wilayah</TabsTrigger>
           <TabsTrigger value="companies">Company</TabsTrigger>
+          <TabsTrigger value="estates">Estate</TabsTrigger>
         </TabsList>
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
@@ -288,10 +356,18 @@ export default function MasterDataPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {['units', 'project-categories', 'approval-positions', 'regions', 'companies'].includes(currentTab) && (
+                  {['units', 'project-categories', 'approval-positions', 'regions', 'companies', 'estates'].includes(currentTab) && (
                     <TableHead>Kode</TableHead>
                   )}
                   <TableHead>Nama</TableHead>
+                  {currentTab === 'estates' && (
+                    <>
+                      <TableHead>Company</TableHead>
+                      <TableHead>Wilayah</TableHead>
+                      <TableHead>Region</TableHead>
+                    </>
+                  )}
+                  {currentTab === 'wilayah' && <TableHead>Region</TableHead>}
                   {currentTab === 'vendors' && <TableHead>Status Kelengkapan</TableHead>}
                   {currentTab === 'approval-positions' && <TableHead>Rank</TableHead>}
                   <TableHead>Status</TableHead>
@@ -301,25 +377,43 @@ export default function MasterDataPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-slate-500">
+                    <TableCell colSpan={7} className="text-center py-8 text-slate-500">
                       Memuat data...
                     </TableCell>
                   </TableRow>
                 ) : data.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-slate-500">
+                    <TableCell colSpan={7} className="text-center py-8 text-slate-500">
                       Tidak ada data yang cocok.
                     </TableCell>
                   </TableRow>
                 ) : (
                   data.map((item) => (
                     <TableRow key={item.id}>
-                      {['units', 'project-categories', 'approval-positions', 'regions', 'companies'].includes(currentTab) && (
+                      {['units', 'project-categories', 'approval-positions', 'regions', 'companies', 'estates'].includes(currentTab) && (
                         <TableCell className="font-mono text-xs text-slate-700">
                           {item.code || '-'}
                         </TableCell>
                       )}
                       <TableCell className="font-medium text-slate-900">{item.name}</TableCell>
+                      {currentTab === 'estates' && (
+                        <>
+                          <TableCell className="text-slate-700 text-sm">
+                            {item.company?.code ? `${item.company.code} - ${item.company.name}` : (item.company?.name || '-')}
+                          </TableCell>
+                          <TableCell className="text-slate-700 text-sm">
+                            {item.wilayah?.name || '-'}
+                          </TableCell>
+                          <TableCell className="text-slate-700 text-sm">
+                            {item.wilayah?.region?.code ? `${item.wilayah.region.code} (${item.wilayah.region.name})` : '-'}
+                          </TableCell>
+                        </>
+                      )}
+                      {currentTab === 'wilayah' && (
+                        <TableCell className="text-slate-700 text-sm">
+                          {item.region?.code ? `${item.region.code} - ${item.region.name}` : (item.region?.name || '-')}
+                        </TableCell>
+                      )}
                       {currentTab === 'vendors' && (
                         <TableCell>
                           <Badge
@@ -397,7 +491,69 @@ export default function MasterDataPage() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {['units', 'project-categories', 'approval-positions', 'regions', 'companies'].includes(currentTab) && (
+            {currentTab === 'estates' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="form-company">Company</Label>
+                  <select
+                    id="form-company"
+                    value={formCompanyId}
+                    onChange={(e) => setFormCompanyId(e.target.value)}
+                    required
+                    disabled={isSubmitting}
+                    className="w-full border border-slate-300 rounded-md p-2 text-sm bg-white"
+                  >
+                    <option value="">Pilih Company...</option>
+                    {companiesList.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.code} - {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="form-wilayah">Wilayah</Label>
+                  <select
+                    id="form-wilayah"
+                    value={formWilayahId}
+                    onChange={(e) => setFormWilayahId(e.target.value)}
+                    required
+                    disabled={isSubmitting}
+                    className="w-full border border-slate-300 rounded-md p-2 text-sm bg-white"
+                  >
+                    <option value="">Pilih Wilayah...</option>
+                    {wilayahList.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+
+            {currentTab === 'wilayah' && (
+              <div className="space-y-2">
+                <Label htmlFor="form-region">Region</Label>
+                <select
+                  id="form-region"
+                  value={formRegionId}
+                  onChange={(e) => setFormRegionId(e.target.value)}
+                  required
+                  disabled={isSubmitting}
+                  className="w-full border border-slate-300 rounded-md p-2 text-sm bg-white"
+                >
+                  <option value="">Pilih Region...</option>
+                  {regionsList.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.code} - {r.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {['units', 'project-categories', 'approval-positions', 'regions', 'companies', 'estates'].includes(currentTab) && (
               <div className="space-y-2">
                 <Label htmlFor="form-code">Kode</Label>
                 <Input
@@ -419,6 +575,29 @@ export default function MasterDataPage() {
                 disabled={isSubmitting}
               />
             </div>
+
+            {currentTab === 'estates' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="form-estate-new">Estate New (Opsional)</Label>
+                  <Input
+                    id="form-estate-new"
+                    value={formEstateNew}
+                    onChange={(e) => setFormEstateNew(e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="form-legacy-code">Legacy Code (Opsional)</Label>
+                  <Input
+                    id="form-legacy-code"
+                    value={formLegacyCode}
+                    onChange={(e) => setFormLegacyCode(e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </>
+            )}
             <DialogFooter>
               <Button
                 type="button"
