@@ -15,6 +15,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { label: 'Dashboard', href: '/' },
     { label: 'Daftar Proyek', href: '/projects' },
     { label: 'Portofolio Gantt', href: '/portfolio' },
+    { label: 'Master Data', href: '/master' },
+    ...(role === 'SUPER_ADMIN' ? [{ label: 'Admin Pengguna', href: '/admin/users' }] : []),
   ];
 
   return (

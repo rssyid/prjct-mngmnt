@@ -558,7 +558,7 @@ export async function deleteMaster(type: MasterType, id: string, actorId: string
         break;
       }
       case 'heavy-equipment-types': {
-        const eqCount = await tx.heavyEquipmentUsage.count({ where: { equipmentTypeId: id } });
+        const eqCount = await tx.heavyEquipmentUsage.count({ where: { heavyEquipmentTypeId: id } });
         if (eqCount > 0) inUse = true;
         before = (await tx.heavyEquipmentType.findUnique({ where: { id } })) as unknown as Record<string, unknown>;
         if (!before) throw new DomainError('NOT_FOUND', 'Jenis alat berat tidak ditemukan');

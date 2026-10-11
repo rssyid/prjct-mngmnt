@@ -1,6 +1,17 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('WM Project Management — Smoke & Navigation E2E', () => {
+  test.beforeEach(async ({ context }) => {
+    await context.addCookies([
+      {
+        name: 'better-auth.session_token',
+        value: 'dummy_session_token',
+        domain: '127.0.0.1',
+        path: '/',
+      },
+    ]);
+  });
+
   test('Memuat halaman Dashboard dengan KPI dan daftar deviasi', async ({ page }) => {
     await page.goto('/');
 
