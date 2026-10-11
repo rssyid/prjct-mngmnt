@@ -25,16 +25,31 @@ Semua item belum dikerjakan. Centang hanya dengan bukti (lihat skill `/verify-ph
 
 ## F1 — Fondasi (AC-01–06, AC-60–62)
 
-- [ ] Migration awal dari schema + migration `constraints` dari `prisma/sql/constraints.sql`.
-- [ ] Better Auth (email/password, session DB, `nextCookies`), field role/isActive/mustChangePassword; bandingkan dengan output CLI Better Auth.
-- [ ] `proxy.ts`, validasi session per route, `assertCan` + permission matrix, halaman login & ganti password (AC-01–04).
-- [ ] Error domain + pemetaan HTTP + envelope; util Decimal, tanggal WIB, format Indonesia.
-- [ ] Service audit dalam transaksi (AC-05) dan pola transaksi + version (409).
-- [ ] Upload/unduh R2 presigned + konfirmasi + batas ukuran (AC-62).
-- [ ] CRUD master: Region, Wilayah, Company, Estate, Block, Vendor (+quick), Unit, Kategori, Material (+quick), Alat berat, Jabatan approver; nonaktif vs hapus (AC-60).
-- [ ] Seed lokasi & master dari `prisma/seed-data/*.json` + Super Admin pertama (AC-61).
-- [ ] Menu Admin: user (buat, role, nonaktif, reset password).
-- Bukti:
+- [x] Migration awal dari schema + migration `constraints` dari `prisma/sql/constraints.sql`.
+- [x] Better Auth (email/password, session DB, `nextCookies`), field role/isActive/mustChangePassword; bandingkan dengan output CLI Better Auth.
+- [x] `proxy.ts`, validasi session per route, `assertCan` + permission matrix, halaman login & ganti password (AC-01–04).
+- [x] Error domain + pemetaan HTTP + envelope; util Decimal, tanggal WIB, format Indonesia.
+- [x] Service audit dalam transaksi (AC-05) dan pola transaksi + version (409).
+- [x] Upload/unduh R2 presigned + konfirmasi + batas ukuran (AC-62).
+- [x] CRUD master: Region, Wilayah, Company, Estate, Block, Vendor (+quick), Unit, Kategori, Material (+quick), Alat berat, Jabatan approver; nonaktif vs hapus (AC-60).
+- [x] Seed lokasi & master dari `prisma/seed-data/*.json` + Super Admin pertama (AC-61).
+- [x] Menu Admin: user (buat, role, nonaktif, reset password).
+- Bukti (11 Oktober 2026):
+  - `pnpm lint`: Lulus tanpa warning/error (ESLint 9.39 flat config).
+  - `pnpm typecheck`: Lulus tanpa error (TypeScript 5.9.3 strict, noUncheckedIndexedAccess).
+  - `pnpm test`: Lulus 27/27 test Vitest (9 test suite: permissions, errors, format, audit, user-management, master-crud, files, seed, auth-session).
+  - `pnpm build`: Lulus kompilasi produksi Turbopack Next.js 16.4.0 (20 rute + proxy middleware).
+  - `pnpm test:e2e`: Lulus 20/20 test Playwright (desktop dan mobile 375px) termasuk audit axe-core dan viewer guard.
+  - Tabel Pemenuhan Acceptance Criteria:
+    - AC-01: Lulus (`tests/integration/auth-session.test.ts` & `tests/e2e/auth-redirect.spec.ts`).
+    - AC-02: Lulus (`tests/unit/permissions.test.ts` & `tests/e2e/viewer-guard.spec.ts`).
+    - AC-03: Lulus (`tests/unit/permissions.test.ts` & `tests/integration/user-management.test.ts`).
+    - AC-04: Lulus (`tests/integration/user-management.test.ts` & `/ganti-password`).
+    - AC-05: Lulus (`tests/integration/audit.test.ts` - trigger `auditlog_immutable`).
+    - AC-06: Lulus (`tests/unit/errors.test.ts` & `tests/integration/master-crud.test.ts`).
+    - AC-60: Lulus (`tests/integration/master-crud.test.ts` - IN_USE 409, nonaktif, vendor isComplete).
+    - AC-61: Lulus (`tests/integration/seed.test.ts` - 8 Region, 18 Wilayah, 27 Company, 63 Estate; idempoten).
+    - AC-62: Lulus (`tests/integration/files.test.ts` - foto 5MB/dokumen 10MB, presigned URL, cleanup 24h).
 
 ## F2 — Proyek dan AFCE (AC-10–25)
 
