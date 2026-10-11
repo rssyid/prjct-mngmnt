@@ -25,6 +25,15 @@ interface MasterData {
   materials: Array<{ name: string; defaultUnitCode: string }>;
   heavyEquipmentTypes: Array<{ name: string }>;
   approvalPositions: Array<{ code: string; name: string; rank: number }>;
+  vendors?: Array<{
+    name: string;
+    type?: 'EKSTERNAL' | 'INTERNAL';
+    address?: string;
+    phone?: string;
+    email?: string;
+    contactName?: string;
+    npwp?: string | null;
+  }>;
   systemSetting?: {
     id: number;
     workingWeekdays: number[];
@@ -221,7 +230,36 @@ export async function runSeed(client: PrismaClient = defaultPrisma) {
     });
   }
 
-  // 10. Seed System Setting
+  // 10. Seed Vendors
+  if (masterJson.vendors && masterJson.vendors.length > 0) {
+    for (const v of masterJson.vendors) {
+      const isComplete = Boolean(
+        v.address?.trim() &&
+          v.phone?.trim() &&
+          v.email?.trim() &&
+          v.contactName?.trim() &&
+          v.npwp?.trim()
+      );
+      const existing = await client.vendor.findFirst({ where: { name: v.name } });
+      if (!existing) {
+        await client.vendor.create({
+          data: {
+            name: v.name,
+            type: (v.type as 'EKSTERNAL' | 'INTERNAL') || 'EKSTERNAL',
+            address: v.address ?? null,
+            phone: v.phone ?? null,
+            email: v.email ?? null,
+            contactName: v.contactName ?? null,
+            npwp: v.npwp ?? null,
+            isComplete,
+            isActive: true,
+          },
+        });
+      }
+    }
+  }
+
+  // 11. Seed System Setting
   const setting = masterJson.systemSetting || {
     id: 1,
     workingWeekdays: [1, 2, 3, 4, 5, 6],

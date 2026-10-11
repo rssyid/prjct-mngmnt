@@ -209,6 +209,7 @@ function MasterDataContent() {
 
   const fetchData = useCallback(async () => {
     try {
+      setIsLoading(true);
       const params = new URLSearchParams();
       if (activeFilter !== 'all') params.set('active', activeFilter);
       if (searchQuery.trim()) params.set('q', searchQuery.trim());
@@ -220,6 +221,8 @@ function MasterDataContent() {
       }
     } catch {
       // ignore
+    } finally {
+      setIsLoading(false);
     }
   }, [currentTab, activeFilter, searchQuery]);
 
@@ -522,8 +525,13 @@ function MasterDataContent() {
         defaultValue="units"
         value={currentTab}
         onValueChange={(val) => {
-          setCurrentTab(val as MasterTab);
-          setSearchQuery('');
+          const nextTab = val as MasterTab;
+          if (nextTab !== currentTab) {
+            setData([]);
+            setIsLoading(true);
+            setCurrentTab(nextTab);
+            setSearchQuery('');
+          }
         }}
       >
         <TabsList className="bg-slate-100 p-1 rounded-lg flex flex-wrap h-auto gap-1 border border-slate-200">

@@ -222,6 +222,44 @@
       "rank": 9
     }
   ],
+  "vendors": [
+    {
+      "name": "PT Sumber Makmur Mandiri",
+      "type": "EKSTERNAL",
+      "address": "Jl. Jenderal Sudirman No. 128, Pekanbaru, Riau",
+      "phone": "081276543210",
+      "email": "kontak@sumbermakmur.co.id",
+      "contactName": "Budi Santoso",
+      "npwp": "01.234.567.8-211.000"
+    },
+    {
+      "name": "PT Duta Tirta Perkasa",
+      "type": "EKSTERNAL",
+      "address": "Kawasan Industri Tenayan Blok B2, Pekanbaru",
+      "phone": "081398765432",
+      "email": "admin@dutatirta.com",
+      "contactName": "Hendra Wijaya",
+      "npwp": "02.345.678.9-212.000"
+    },
+    {
+      "name": "CV Bina Usaha Mandiri",
+      "type": "EKSTERNAL",
+      "address": "Jl. Riau No. 45, Pontianak",
+      "phone": "081187654321",
+      "email": "bina.usaha@gmail.com",
+      "contactName": "Agus Salim",
+      "npwp": "03.456.789.0-701.000"
+    },
+    {
+      "name": "Tim Swakelola Kebun Mandah",
+      "type": "INTERNAL",
+      "address": "Kebun Mandah, PT THIP, Riau",
+      "phone": "081234567890",
+      "email": "swakelola.mandah@wm.local",
+      "contactName": "Koordinator Swakelola",
+      "npwp": null
+    }
+  ],
   "approvalMatrixTiers": [],
   "systemSetting": {
     "id": 1,

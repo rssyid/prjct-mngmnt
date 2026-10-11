@@ -50,11 +50,12 @@ Neon PostgreSQL (data, session, audit) ──► GitHub Actions harian: pg_dump 
 | `src/shared/` | Skema Zod, enum, tipe, kode error, util tanggal/kalender kerja, format angka | Akses database |
 | `src/domain/` | Service per modul (di bawah); setiap mutasi dalam transaksi + audit | Import dari `app/` |
 | `src/infra/` | Prisma client, repository, klien R2, Better Auth, renderer ekspor | Aturan bisnis |
-| `src/components/` | Komponen UI (shadcn di `components/ui`), Gantt | Logika domain |
+| `src/components/` | Komponen UI: primitive shadcn (`ui/`), komponen lintas fitur (`common/`), per domain (`projects/`, `survey/`, `afce/`, `approval/`, `budget/`), Gantt | Logika domain, query mutasi langsung |
 | `prisma/` | schema, migrations, sql tambahan, seed-data, seed script | — |
 | `tests/` | unit, integration, e2e | — |
 
 Modul domain: `project-transition` (satu-satunya pengubah `Project.status`), `afce` (attempt, BOQ, snapshot level, keputusan, AR tambahan, anggaran), `approval-matrix`, `tender-spk`, `physical` (status fisik, log progres, alat berat, jeda), `work-package` (PR, PO, produksi, kiriman, koreksi, pembayaran), `schedule` (baseline, revisi, kalender kerja), `progress-ews` (bobot, progres, rencana linear, deviasi, freeze, Kurva S, data sel Gantt), `bast`, `master`, `admin` (user, soft delete, restore, purge), `audit`, `export`, `files`.
+Struktur UI (D-21): Semua pilihan dropdown bersumber dinamis dari tabel master `/api/master/*`. Komponen UI dipisah antara RSC (fetch data awal) dan Client Component (interaksi/form) secara terstruktur per domain agar mempermudah pemeliharaan, migrasi dan revamp.
 
 ## 4. Alur request
 
