@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { RoleProvider } from '@/components/prototype/role-context';
+import { AppShell } from '@/components/prototype/app-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,7 +38,7 @@ interface UserItem {
   createdAt: string;
 }
 
-export default function AdminUsersPage() {
+function AdminUsersContent() {
   const [users, setUsers] = useState<UserItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -192,7 +195,15 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 text-xs text-slate-500">
+        <Link href="/" className="hover:text-slate-800 transition-colors">
+          Dashboard
+        </Link>
+        <span>/</span>
+        <span className="font-semibold text-slate-800">Admin Pengguna</span>
+      </div>
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -500,5 +511,15 @@ export default function AdminUsersPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function AdminUsersPage() {
+  return (
+    <RoleProvider>
+      <AppShell>
+        <AdminUsersContent />
+      </AppShell>
+    </RoleProvider>
   );
 }

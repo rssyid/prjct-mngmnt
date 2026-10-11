@@ -10,11 +10,15 @@ interface RoleContextValue {
   canMutate: boolean;
   isSuperAdmin: boolean;
   roleLabel: string;
+  userName?: string;
+  userEmail?: string;
 }
 
 const RoleContext = createContext<RoleContextValue | undefined>(undefined);
 
 export function RoleProvider({ children }: { children: React.ReactNode }) {
+  const [userName, setUserName] = useState<string | undefined>(undefined);
+  const [userEmail, setUserEmail] = useState<string | undefined>(undefined);
   const [role, setRoleState] = useState<RoleType>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('wm_active_role') as RoleType | null;
@@ -24,6 +28,24 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     }
     return 'SUPER_ADMIN';
   });
+
+  React.useEffect(() => {
+    fetch('/api/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (json?.data) {
+          setUserName(json.data.name);
+          setUserEmail(json.data.email);
+          if (
+            json.data.role &&
+            ['SUPER_ADMIN', 'WM_HO_SPECIALIST', 'MANAGEMENT_VIEWER'].includes(json.data.role)
+          ) {
+            setRoleState(json.data.role as RoleType);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const setRole = (newRole: RoleType) => {
     setRoleState(newRole);
@@ -50,6 +72,8 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         canMutate,
         isSuperAdmin,
         roleLabel,
+        userName,
+        userEmail,
       }}
     >
       {children}

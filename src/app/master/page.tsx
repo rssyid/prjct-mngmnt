@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { RoleProvider } from '@/components/prototype/role-context';
+import { AppShell } from '@/components/prototype/app-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -56,7 +59,7 @@ interface MasterRecord {
   [key: string]: unknown;
 }
 
-export default function MasterDataPage() {
+function MasterDataContent() {
   const [currentTab, setCurrentTab] = useState<MasterTab>('units');
   const [data, setData] = useState<MasterRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -287,7 +290,15 @@ export default function MasterDataPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 text-xs text-slate-500">
+        <Link href="/" className="hover:text-slate-800 transition-colors">
+          Dashboard
+        </Link>
+        <span>/</span>
+        <span className="font-semibold text-slate-800">Master Data</span>
+      </div>
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -619,5 +630,15 @@ export default function MasterDataPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function MasterDataPage() {
+  return (
+    <RoleProvider>
+      <AppShell>
+        <MasterDataContent />
+      </AppShell>
+    </RoleProvider>
   );
 }
