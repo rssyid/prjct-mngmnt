@@ -13,7 +13,7 @@ export const createApprovalTierSchema = z
     forAfce: z.boolean().default(true),
     forArSupplement: z.boolean().default(true),
     minAmount: z.union([z.number(), z.string()], {
-      required_error: 'Batas bawah nominal (min) wajib diisi',
+      message: 'Batas bawah nominal (min) wajib diisi',
     }),
     maxAmount: z
       .union([z.number(), z.string()])

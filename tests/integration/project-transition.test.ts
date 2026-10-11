@@ -6,7 +6,7 @@ import { DomainError } from '@/shared/errors';
 describe('Project Transition Integration & Immutability (AC-15, AC-12)', () => {
   const timestamp = Date.now();
   const testUserId = `user_trans_${timestamp}`;
-  const testCompanyCode = `PT_${timestamp.toString().slice(-4)}`;
+  let testCompanyCode = '';
   let testCompanyId = '';
   let testCategoryId = '';
   let testEstateId = '';

@@ -5,7 +5,7 @@ import { createProject } from '@/domain/project/project-service';
 describe('Atomic Project Code Generation Concurrency (AC-10)', () => {
   const timestamp = Date.now();
   const testUserId = `user_code_${timestamp}`;
-  const testCompanyCode = `P${timestamp.toString().slice(-4)}`;
+  let testCompanyCode = '';
   let testCompanyId = '';
   let testCategoryId = '';
   let testEstateId = '';

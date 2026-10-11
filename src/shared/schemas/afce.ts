@@ -5,7 +5,7 @@ export const boqItemInputSchema = z.object({
   buildingName: z.string().nullable().optional(),
   activityName: z.string().min(1, 'Nama kegiatan/bangunan wajib diisi'),
   amount: z.union([z.number(), z.string()], {
-    required_error: 'Total harga wajib diisi',
+    message: 'Total harga wajib diisi',
   }),
   notes: z.string().nullable().optional(),
 });

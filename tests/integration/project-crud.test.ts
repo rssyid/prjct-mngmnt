@@ -36,98 +36,76 @@ describe('Project CRUD, Multi-Estate Validation & Multi-Region Filters (AC-11, A
       },
     });
 
-    // 2. Companies
-    const cA = await prisma.company.create({
-      data: {
-        code: `CA_${timestamp.toString().slice(-4)}`,
-        name: `PT Company A ${timestamp}`,
-      },
-    });
+    // 2. Companies (dari seed)
+    const cA = await prisma.company.findFirstOrThrow({ where: { code: 'THIP' } });
     companyAId = cA.id;
 
-    const cB = await prisma.company.create({
-      data: {
-        code: `CB_${timestamp.toString().slice(-4)}`,
-        name: `PT Company B ${timestamp}`,
-      },
-    });
+    const cB = await prisma.company.findFirstOrThrow({ where: { code: 'JJP' } });
     companyBId = cB.id;
 
-    // 3. Category
-    const cat = await prisma.projectCategory.create({
-      data: {
-        code: `CAT_${timestamp.toString().slice(-4)}`,
-        name: `Category CRUD ${timestamp}`,
-      },
-    });
+    // 3. Category (dari seed)
+    const cat = await prisma.projectCategory.findFirstOrThrow();
     categoryId = cat.id;
 
-    // 4. Regions
-    const r1 = await prisma.region.create({
-      data: { code: `R1_${timestamp}`, name: `Region 1 ${timestamp}`, ops: 'SUMATERA' },
-    });
-    region1Id = r1.id;
-
-    const r2 = await prisma.region.create({
-      data: { code: `R2_${timestamp}`, name: `Region 2 ${timestamp}`, ops: 'KALBAR' },
-    });
-    region2Id = r2.id;
-
-    // 5. Wilayahs
-    const w1 = await prisma.wilayah.create({
-      data: { regionId: region1Id, name: `Wilayah 1 ${timestamp}` },
-    });
-    wilayah1Id = w1.id;
-
-    const w2 = await prisma.wilayah.create({
-      data: { regionId: region2Id, name: `Wilayah 2 ${timestamp}` },
-    });
-    wilayah2Id = w2.id;
-
-    // 6. Estates
-    const eA1 = await prisma.estate.create({
-      data: {
-        companyId: companyAId,
-        wilayahId: wilayah1Id,
-        code: `EA1_${timestamp.toString().slice(-4)}`,
-        name: 'Estate A1',
-      },
+    // 4. Estates (dari seed)
+    // EA1 di Region R1, Wilayah THIP 1
+    const eA1 = await prisma.estate.findFirstOrThrow({
+      where: { companyId: companyAId, code: 'MER' },
+      include: { wilayah: { include: { region: true } } },
     });
     estateA1Id = eA1.id;
+    wilayah1Id = eA1.wilayahId;
+    region1Id = eA1.wilayah.regionId;
 
-    const eA2 = await prisma.estate.create({
-      data: {
-        companyId: companyAId,
-        wilayahId: wilayah2Id,
-        code: `EA2_${timestamp.toString().slice(-4)}`,
-        name: 'Estate A2',
-      },
+    // EA2 di Region R2, Wilayah THIP 3
+    const eA2 = await prisma.estate.findFirstOrThrow({
+      where: { companyId: companyAId, code: 'SEG' },
+      include: { wilayah: { include: { region: true } } },
     });
     estateA2Id = eA2.id;
+    wilayah2Id = eA2.wilayahId;
+    region2Id = eA2.wilayah.regionId;
 
-    const eB = await prisma.estate.create({
-      data: {
-        companyId: companyBId,
-        wilayahId: wilayah1Id,
-        code: `EB_${timestamp.toString().slice(-4)}`,
-        name: 'Estate B',
-      },
+    // EB milik Company B (JJP)
+    const eB = await prisma.estate.findFirstOrThrow({
+      where: { companyId: companyBId, code: 'JJP1' },
     });
     estateBId = eB.id;
 
-    // 7. Blocks
+    // 5. Blocks (dibuat & dibersihkan saat afterAll)
     const bA1 = await prisma.block.create({
-      data: { estateId: estateA1Id, blockCode: 'A01', name: 'Blok A01' },
+      data: { estateId: estateA1Id, blockCode: `A_${timestamp.toString().slice(-4)}`, name: 'Blok Test A' },
     });
     blockA1Id = bA1.id;
 
     const bO = await prisma.block.create({
-      data: { estateId: estateBId, blockCode: 'B01', name: 'Blok B01' },
+      data: { estateId: estateBId, blockCode: `B_${timestamp.toString().slice(-4)}`, name: 'Blok Test B' },
     });
     blockOtherId = bO.id;
   });
 
   afterAll(async () => {
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe("SET LOCAL app.allow_purge = 'on'");
+
+      // Hapus proyek uji yang dibuat selama test
+      const projects = await tx.project.findMany({
+        where: { name: { contains: timestamp.toString() } },
+        select: { id: true },
+      });
+      const pIds = projects.map((p) => p.id);
+      if (pIds.length > 0) {
+        await tx.projectStatusHistory.deleteMany({ where: { projectId: { in: pIds } } });
+        await tx.projectEstate.deleteMany({ where: { projectId: { in: pIds } } });
+        await tx.project.deleteMany({ where: { id: { in: pIds } } });
+      }
+
+      // Hapus blok uji
+      await tx.block.deleteMany({
+        where: { id: { in: [blockA1Id, blockOtherId].filter(Boolean) } },
+      });
+    });
+
     await prisma.user.update({
       where: { id: testUserId },
       data: { isActive: false },
