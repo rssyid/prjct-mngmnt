@@ -46,7 +46,7 @@ describe('Project Transition Integration & Immutability (AC-15, AC-12)', () => {
     let regId = reg?.id;
     if (!regId) {
       const newReg = await prisma.region.create({
-        data: { code: `REG_${timestamp}`, name: 'Region Test' },
+        data: { code: `REG_${timestamp}`, name: 'Region Test', ops: 'SUMATERA' },
       });
       regId = newReg.id;
     }

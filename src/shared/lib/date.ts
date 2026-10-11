@@ -22,3 +22,7 @@ export function getWeekStart(dateInput: Date | string): string {
   const monday = startOfWeek(d, { weekStartsOn: 1 });
   return format(monday, 'yyyy-MM-dd');
 }
+
+export function getCurrentWibDate(): Date {
+  return new Date();
+}
